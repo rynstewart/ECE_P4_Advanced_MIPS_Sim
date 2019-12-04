@@ -240,5 +240,43 @@ class Statistics:
                     f.write('No Registers have changed. \n')
                     continue
                 f.write('No Registers have changed. \n')
-#we need 
-#lw, sll, sub, sw
+
+            elif(line[0:2] == "lw"):
+                line= line.replace("lw","")
+                line= line.replace("(",",")
+                line= line.replace(")","")
+                line= line.split(",")
+                PC = PC + 4
+                regval[int(line[0])]= MEM[ int(line[1]) + regval[int(line[2])] ]
+                f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
+                f.write('PC is now at ' + str(PC) + '\n')
+                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+            elif(line[0:2] == "sw"):
+                line= line.replace("sw","")
+                line= line.replace("(",",")
+                line= line.replace(")","")
+                line= line.split(",")
+                PC = PC + 4
+                MEM[ int(line[1]) + regval[int(line[2])] ] = regval[int(line[0])]
+                f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
+                f.write('PC is now at ' + str(PC) + '\n')
+                f.write('Registers that have changed: None)
+
+            elif(line[0:3] =="sub"):
+                line = line.replace("sub","")
+                line = line.split(",")
+                PC = PC + 4
+                regval[int(line[0])] = regval[int(line[1])] - regval[int(line[2])]
+                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
+                f.write('PC is now at ' + str(PC) + '\n')
+                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+            elif(line[0:3] == "sll"): 
+                line = line.replace("sll","")
+                line = line.split(",")
+                PC = PC + 4
+                regval[int(line[0])] = regval[int(line[1])] << int(line[2])
+                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
+                f.write('PC is now at ' + str(PC) + '\n')
+                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')  
