@@ -65,28 +65,28 @@ class Statistics:
         print("                    " + str(self.fourCycles) + " instructions take 4 cycles" )
         print("                    " + str(self.fiveCycles) + " instructions take 5 cycles" )
 
-    def saveJumpLabel(asm, labelIndex, labelName, labelAddr):
-    lineCount = 0
-    for line in asm:
-        line = line.replace(" ","")
-        if(line.count(":")):
-            labelName.append(line[0:line.index(":")]) # append the label name
-            labelIndex.append(lineCount) # append the label's index\
-            labelAddr.append(lineCount*4)
-            #asm[lineCount] = line[line.index(":")+1:]
-        lineCount += 1
-    for item in range(asm.count('\n')): # Remove all empty lines '\n'
-        asm.remove('\n')
+def saveJumpLabel(asm, labelIndex, labelName, labelAddr):
+lineCount = 0
+for line in asm:
+    line = line.replace(" ","")
+    if(line.count(":")):
+        labelName.append(line[0:line.index(":")]) # append the label name
+        labelIndex.append(lineCount) # append the label's index\
+        labelAddr.append(lineCount*4)
+        #asm[lineCount] = line[line.index(":")+1:]
+    lineCount += 1
+for item in range(asm.count('\n')): # Remove all empty lines '\n'
+    asm.remove('\n')
 
-    def regNameInit(regName):
-    i = 0
-    while i<=23:
-        regName.append(str(i))
-        i = i + 1
-    regName.append('lo')
-    regName.append('hi')
+def regNameInit(regName):
+i = 0
+while i<=23:
+    regName.append(str(i))
+    i = i + 1
+regName.append('lo')
+regName.append('hi')
 
-    def final_print(regval, PC, DIC)
+def final_print(regval, PC, DIC):
     ("REGISTERS:")
     print("-----------")
     for x in range(len(regval)):
@@ -120,163 +120,163 @@ class Statistics:
             count = 0
             print("\n")
 
-    def simulate(Instructions, f, debugMode):
-        MEM = [0]*12288 #intialize array to all 0s for 0x3000 indices
-        labelIndex = []
-        labelName = []
-        labelAddr = []
-        regName = []
-        PC = 0
-        regNameInit(regName)
-        regval = [0]*26 #0-23 and lo, hi
-        LO = 24
-        HI = 25
+def simulate(Instructions, f, debugMode):
+    MEM = [0]*12288 #intialize array to all 0s for 0x3000 indices
+    labelIndex = []
+    labelName = []
+    labelAddr = []
+    regName = []
+    PC = 0
+    regNameInit(regName)
+    regval = [0]*26 #0-23 and lo, hi
+    LO = 24
+    HI = 25
 
-        finished = False
-        while(not(finished)):
-            fetch = Instructions[PC]
-            
-            f.write('------------------------------ \n')
-            if(not(':' in line)):
-                f.write('MIPS Instruction: ' + line + '\n')
-            line = line.replace("\n","") # Removes extra chars
-            line = line.replace("$","")
-            line = line.replace(" ","")
-            line = line.replace("zero","0") # assembly can also use both $zero and $0
+    finished = False
+    while(not(finished)):
+        fetch = Instructions[PC]
+        
+        f.write('------------------------------ \n')
+        if(not(':' in line)):
+            f.write('MIPS Instruction: ' + line + '\n')
+        line = line.replace("\n","") # Removes extra chars
+        line = line.replace("$","")
+        line = line.replace(" ","")
+        line = line.replace("zero","0") # assembly can also use both $zero and $0
 
-            if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
-                #f.write(line)
-                line = line.replace("addi","")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[0])] = regval[int(line[1])] + int(line[2])
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+        if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
+            #f.write(line)
+            line = line.replace("addi","")
+            line = line.split(",")
+            PC = PC + 4
+            regval[int(line[0])] = regval[int(line[1])] + int(line[2])
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
-            elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
-                line = line.replace("xor","")
-                line = line.split(",")
-                PC = PC + 4
-                #x = format(int(line[1]),'032b')^format(int(line[2]),'032b')
-                x = regval[int(line[1])]
-                y = regval[int(line[2])]
-                z = int(x)^int(y)
-                regval[int(line[0])] = z
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' ^ $' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+        elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
+            line = line.replace("xor","")
+            line = line.split(",")
+            PC = PC + 4
+            #x = format(int(line[1]),'032b')^format(int(line[2]),'032b')
+            x = regval[int(line[1])]
+            y = regval[int(line[2])]
+            z = int(x)^int(y)
+            regval[int(line[0])] = z
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' ^ $' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
-            #addu
-            elif(line[0:4] == "addu"): 
-                line = line.replace("addu","")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[0])] = abs(regval[int(line[1])]) + abs(regval[int(line[2])])
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
-                       
-            #slt
-            elif(line[0:3] == "slt"):
-                line = line.replace("slt","")
-                line = line.split(",")
-                if(regval[int(line[1])] < regval[int(line[2])]):
-                    regval[int(line[0])] = 1
-                else:
-                    regval[int(line[0])] = 0
+        #addu
+        elif(line[0:4] == "addu"): 
+            line = line.replace("addu","")
+            line = line.split(",")
+            PC = PC + 4
+            regval[int(line[0])] = abs(regval[int(line[1])]) + abs(regval[int(line[2])])
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+                    
+        #slt
+        elif(line[0:3] == "slt"):
+            line = line.replace("slt","")
+            line = line.split(",")
+            if(regval[int(line[1])] < regval[int(line[2])]):
+                regval[int(line[0])] = 1
+            else:
+                regval[int(line[0])] = 0
 
-                PC = PC + 4
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n') 
+            PC = PC + 4
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n') 
 
-            elif(line[0:3] == "ori"):
-                line = line.replace("ori", "")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[1])] = int(line[2],16) | regval[int(line[0])]
-                temp_val = format( int(regval[int(line[1])]),'032b')
+        elif(line[0:3] == "ori"):
+            line = line.replace("ori", "")
+            line = line.split(",")
+            PC = PC + 4
+            regval[int(line[1])] = int(line[2],16) | regval[int(line[0])]
+            temp_val = format( int(regval[int(line[1])]),'032b')
 
-                f.write('Operation: $' + line[1] + '= $' + line[0] + "|"  + line[2])
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + str( int(line[2],16) ) + '=' + str(regval[int(line[0])]) + '\n')
-            
-            #bne
-            elif(line[0:3] == "bne"): # BNE
-                line = line.replace("bne","")
-                line = line.split(",")
-                if(regval[int(line[0])]!=regval[int(line[1])]):
-                    if(line[2].isdigit()): # First,test to see if it's a label or a integer
-                        PC = line[2]
-                        lineCount = line[2]
-                        f.write('PC is now at ' + str(line[2]) + '\n')
-                    else: # Jumping to label
-                        for i in range(len(labelName)):
-                            if(labelName[i] == line[2]):
-                                PC = labelAddr[i]
-                                lineCount = labelIndex[i]
-                                f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
-                    f.write('No Registers have changed. \n')
-                    continue
+            f.write('Operation: $' + line[1] + '= $' + line[0] + "|"  + line[2])
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + str( int(line[2],16) ) + '=' + str(regval[int(line[0])]) + '\n')
+        
+        #bne
+        elif(line[0:3] == "bne"): # BNE
+            line = line.replace("bne","")
+            line = line.split(",")
+            if(regval[int(line[0])]!=regval[int(line[1])]):
+                if(line[2].isdigit()): # First,test to see if it's a label or a integer
+                    PC = line[2]
+                    lineCount = line[2]
+                    f.write('PC is now at ' + str(line[2]) + '\n')
+                else: # Jumping to label
+                    for i in range(len(labelName)):
+                        if(labelName[i] == line[2]):
+                            PC = labelAddr[i]
+                            lineCount = labelIndex[i]
+                            f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
-            
+                continue
+            f.write('No Registers have changed. \n')
+        
 
-            #beq
-            elif(line[0:3] == "beq"): # Beq
-                line = line.replace("beq","")
-                line = line.split(",")
-                if(regval[int(line[0])]==regval[int(line[1])]):
-                    if(line[2].isdigit()): # First,test to see if it's a label or a integer
-                        PC = line[2]
-                        lineCount = line[2]
-                        f.write('PC is now at ' + str(line[2]) + '\n')
-                    else: # Jumping to label
-                        for i in range(len(labelName)):
-                            if(labelName[i] == line[2]):
-                                PC = labelAddr[i]
-                                lineCount = labelIndex[i]
-                                f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
-                    f.write('No Registers have changed. \n')
-                    continue
+        #beq
+        elif(line[0:3] == "beq"): # Beq
+            line = line.replace("beq","")
+            line = line.split(",")
+            if(regval[int(line[0])]==regval[int(line[1])]):
+                if(line[2].isdigit()): # First,test to see if it's a label or a integer
+                    PC = line[2]
+                    lineCount = line[2]
+                    f.write('PC is now at ' + str(line[2]) + '\n')
+                else: # Jumping to label
+                    for i in range(len(labelName)):
+                        if(labelName[i] == line[2]):
+                            PC = labelAddr[i]
+                            lineCount = labelIndex[i]
+                            f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
+                continue
+            f.write('No Registers have changed. \n')
 
-            elif(line[0:2] == "lw"):
-                line= line.replace("lw","")
-                line= line.replace("(",",")
-                line= line.replace(")","")
-                line= line.split(",")
-                PC = PC + 4
-                regval[int(line[0])]= MEM[ int(line[1]) + regval[int(line[2])] ]
-                f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+        elif(line[0:2] == "lw"):
+            line= line.replace("lw","")
+            line= line.replace("(",",")
+            line= line.replace(")","")
+            line= line.split(",")
+            PC = PC + 4
+            regval[int(line[0])]= MEM[ int(line[1]) + regval[int(line[2])] ]
+            f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
-            elif(line[0:2] == "sw"):
-                line= line.replace("sw","")
-                line= line.replace("(",",")
-                line= line.replace(")","")
-                line= line.split(",")
-                PC = PC + 4
-                MEM[ int(line[1]) + regval[int(line[2])] ] = regval[int(line[0])]
-                f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: None)
+        elif(line[0:2] == "sw"):
+            line= line.replace("sw","")
+            line= line.replace("(",",")
+            line= line.replace(")","")
+            line= line.split(",")
+            PC = PC + 4
+            MEM[ int(line[1]) + regval[int(line[2])] ] = regval[int(line[0])]
+            f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: None)
 
-            elif(line[0:3] =="sub"):
-                line = line.replace("sub","")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[0])] = regval[int(line[1])] - regval[int(line[2])]
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+        elif(line[0:3] =="sub"):
+            line = line.replace("sub","")
+            line = line.split(",")
+            PC = PC + 4
+            regval[int(line[0])] = regval[int(line[1])] - regval[int(line[2])]
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
-            elif(line[0:3] == "sll"): 
-                line = line.replace("sll","")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[0])] = regval[int(line[1])] << int(line[2])
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')  
+        elif(line[0:3] == "sll"): 
+            line = line.replace("sll","")
+            line = line.split(",")
+            PC = PC + 4
+            regval[int(line[0])] = regval[int(line[1])] << int(line[2])
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')  
