@@ -13,19 +13,19 @@ def twoComplement(string):
 
 class Statistics:
     def __init__(self, debugMode):
-            self.I= ""               #current instruction being executed
-            self.name = ""           # name of the instruction
-            self.cycle = 0           # Total cycles in simulation
-            self.DIC = 0             # Total Dynamic Instr Count
-            self.threeCycles= 0      # How many instr that took 3 cycles to execute
-            self.fourCycles = 0      #                          4 cycles
-            self.fiveCycles = 0      #                          5 cycles
-        #self.DataHazard = 0      #number of data hazards
-        #self.ControlHazard = 0   #number of control hazards
-        #self.NOPcount = 0        #keeps track of NOP
-        #self.flushCount = 0      #keeps track of flush
-        #self.stallCount = 0      #keeps track of stall count
-            self.debugMode = debugMode
+        self.I= ""               #current instruction being executed
+        self.name = ""           # name of the instruction
+        self.cycle = 0           # Total cycles in simulation
+        self.DIC = 0             # Total Dynamic Instr Count
+        self.threeCycles= 0      # How many instr that took 3 cycles to execute
+        self.fourCycles = 0      #                          4 cycles
+        self.fiveCycles = 0      #                          5 cycles
+    #self.DataHazard = 0      #number of data hazards
+    #self.ControlHazard = 0   #number of control hazards
+    #self.NOPcount = 0        #keeps track of NOP
+    #self.flushCount = 0      #keeps track of flush
+    #self.stallCount = 0      #keeps track of stall count
+        self.debugMode = debugMode
     
     def log(self,I,name,cycle,pc):
         self.I = I
@@ -37,9 +37,10 @@ class Statistics:
         self.fourCycles += 1 if (cycle == 4) else 0
         self.fiveCycles += 1 if (cycle == 5) else 0
 
+        ''' 
     def prints(self):
         #modify to work with asm instructions (not binary MC)
-        '''
+        
         imm = int(self.I[16:32],2) if self.I[16]=='0' else -(65535 -int(self.I[16:32],2)+1)
         if(self.debugMode):
             print("\n")
@@ -57,7 +58,7 @@ class Statistics:
             else:
                 print("")
             '''
-     def exitSim(self):
+    def exitSim(self):
         print("***Finished simulation***")
         print("Total # of cycles: " + str(self.cycle))
         print("Dynamic instructions count: " +str(self.DIC) + ". Break down:")
@@ -66,25 +67,25 @@ class Statistics:
         print("                    " + str(self.fiveCycles) + " instructions take 5 cycles" )
 
 def saveJumpLabel(asm, labelIndex, labelName, labelAddr):
-lineCount = 0
-for line in asm:
-    line = line.replace(" ","")
-    if(line.count(":")):
-        labelName.append(line[0:line.index(":")]) # append the label name
-        labelIndex.append(lineCount) # append the label's index\
-        labelAddr.append(lineCount*4)
-        #asm[lineCount] = line[line.index(":")+1:]
-    lineCount += 1
-for item in range(asm.count('\n')): # Remove all empty lines '\n'
-    asm.remove('\n')
+    lineCount = 0
+    for line in asm:
+        line = line.replace(" ","")
+        if(line.count(":")):
+            labelName.append(line[0:line.index(":")]) # append the label name
+            labelIndex.append(lineCount) # append the label's index\
+            labelAddr.append(lineCount*4)
+            #asm[lineCount] = line[line.index(":")+1:]
+        lineCount += 1
+    for item in range(asm.count('\n')): # Remove all empty lines '\n'
+        asm.remove('\n')
 
 def regNameInit(regName):
-i = 0
-while i<=23:
-    regName.append(str(i))
-    i = i + 1
-regName.append('lo')
-regName.append('hi')
+    i = 0
+    while i<=23:
+        regName.append(str(i))
+        i = i + 1
+    regName.append('lo')
+    regName.append('hi')
 
 def final_print(regval, PC, DIC):
     ("REGISTERS:")
@@ -131,11 +132,25 @@ def simulate(Instructions, f, debugMode):
     regval = [0]*26 #0-23 and lo, hi
     LO = 24
     HI = 25
-
-    finished = False
-    while(not(finished)):
-        fetch = Instructions[PC]
+    
+    f = open(f,"w+")
+    
+    for line in Instructions:
         
+        if(debugMode == 1):
+            while(True):
+                user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+                if(user_pause == ""):
+                    print('MIPS Instruction: ' + line + '\n')
+                    break
+		        
+                if(user_pause == "q"):
+                    print("Continuing in non-stop mode")
+                    debugMode = 2
+                    break
+
+                else:
+                    continue
         f.write('------------------------------ \n')
         if(not(':' in line)):
             f.write('MIPS Instruction: ' + line + '\n')
@@ -247,7 +262,8 @@ def simulate(Instructions, f, debugMode):
             line= line.replace(")","")
             line= line.split(",")
             PC = PC + 4
-            regval[int(line[0])]= MEM[ int(line[1]) + regval[int(line[2])] ]
+            MEM_val = MEM[ int(line[1]) + regval[int(line[2])] ] & 0x0000000000000000FFFFFFFFFFFFFFFF
+            regval[int(line[0])]= MEM_val
             f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
@@ -258,10 +274,11 @@ def simulate(Instructions, f, debugMode):
             line= line.replace(")","")
             line= line.split(",")
             PC = PC + 4
+            MEM_val = regval[int(line[0])] & 0x0000000000000000FFFFFFFFFFFFFFFF
             MEM[ int(line[1]) + regval[int(line[2])] ] = regval[int(line[0])]
             f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
-            f.write('Registers that have changed: None)
+            f.write('Registers that have changed: None\n')
 
         elif(line[0:3] =="sub"):
             line = line.replace("sub","")
@@ -276,7 +293,80 @@ def simulate(Instructions, f, debugMode):
             line = line.replace("sll","")
             line = line.split(",")
             PC = PC + 4
-            regval[int(line[0])] = regval[int(line[1])] << int(line[2])
+            regval[int(line[0])] = regval[int(line[1])] << int(line[2]) & 0x0000000000000000FFFFFFFFFFFFFFFF
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
-            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')  
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')     
+
+    f.close()
+
+
+def splitText(text):
+    return text.split("\n")
+
+def readIn(s):
+    text = ""
+    with open(s, "r") as f:
+        for line in f:
+            if (line != "\n" and line[0]!='#'):
+                text += line
+
+    return text
+
+def main():
+    
+    while(True):
+        file_Name = input("Please type input file name or enter for default (mips1.asm), or q to quit:\n")
+        if(file_Name == "q"):
+            print("Bye!")
+            return
+        if(file_Name == ""):
+            file_Name = "mips1.asm"
+        try:
+            f = open(file_Name)
+            f.close()
+            break
+        except FileNotFoundError:
+            print('File does not exist')
+
+    while(True):
+        file_NameOut = input("Please type output file name or enter for default (mc.txt), or q to quit:\n")
+        if(file_NameOut == "q"):
+            print("Bye!")
+            return
+        if(file_NameOut == ""):
+            file_NameOut = "mc.txt"
+            break
+
+    while(True):
+        user_select = input("select one of the below or q to quit:\n" + \
+            "\ta) Diagnosis mode\n" +\
+            "\tb) Non-stop mode\n")
+
+        if(user_select == "a"):
+            select = 1
+            break
+        
+        if(user_select == "b"):
+            select = 2
+            break
+
+        if(user_select == "q"):
+            return
+
+        else:
+            print("ERROR: Please type valid input\n")
+            continue
+
+    h = open(file_Name,"r")
+
+    asm = h.readlines()
+    for item in range(asm.count('\n')): # Remove all empty lines '\n'
+        asm.remove('\n')
+    #breakpoint()
+    simulate(asm, file_NameOut, select)
+
+
+  
+
+main()
