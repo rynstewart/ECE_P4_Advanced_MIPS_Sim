@@ -1,6 +1,6 @@
-            
-                       
 #####instructions we still need######
+
+#1) Take asm and put each line or instruction details into an array
 
 
 def saveJumpLabel(asm,labelIndex, labelName, labelAddr):
@@ -27,17 +27,6 @@ def regNameInit(regName):
 def rshift(val, n): 
     #x = 1
     return val>>n
-
-    """
-    if val >= 0:
-        return val>>n
-    else:
-        #i = (format(val, '032b') + format(0x8000, '032b'))>>n
-        while x <= n:
-            i = (val)>>1 + 0x8000
-            x+=1
-        return i
-    """
 
 def hash(A,B,pattern_Reg, MEM, regval):
     #first fold (down to 32 bits)
@@ -129,10 +118,32 @@ def main():
         asm.remove('\n')
 
     saveJumpLabel(asm,labelIndex,labelName, labelAddr) # Save all jump's destinations
+    while(True):
+        user_select = input("select one of the below:\n" + \
+            "\ta) Diagnosis mode\n" +\
+            "\tb) Non-stop mode\n")
+
+        if(user_select == "a"):
+            select = 1
+            break
+        
+        if(user_select == "b"):
+            select = 2
+            break
+
+        else:
+            print("ERROR: Please type valid input\n")
+            continue
 
     #for lineCount in len(asm):
     lineCount = 0
     while(lineCount < len(asm)):
+        
+        if(select == 1):
+            while(True):
+                user_pause = input("Press enter to continue\n")
+                if(user_pause == ""):
+                    break
 
         line = asm[lineCount]
         f.write('------------------------------ \n')
