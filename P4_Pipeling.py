@@ -676,7 +676,7 @@ def simulate(Instructions, f, debugMode):
                         i = 0
                         stats.log("beq", 4, PC)
 
-                #continue
+            #continue
 
 
         elif(line[0:2] =="lw" and not('lw_loop' in line)):
@@ -1008,49 +1008,70 @@ def readIn(s):
     return text
 
 def main():
+
+    choice_Name = input("Please type 1 for Processor Simulation of MC, 2 for Processor Simulation of PC and 3 for CacheSim, or q for quit" + '\n')
+
+    if (choice_Name == "1"):
+        print("You have chosen Processor Simulation of MC" + '\n')
+
+    elif(choice_Name == "2"):
+        print("You have chosen Processor Simulation of PC" + '\n')
+
+    elif(choice_Name == "3"):
+        print("You have chosen CacheSim")
+
+    elif(choice_Name == "q"):
+        return
+    else:
+        print("Error enter valid input")
+        return
     
     while(True):
-        file_Name = input("Please type input file name or enter for default (proj_A.asm), or q to quit:\n")
-        if(file_Name == "q"):
-            print("Bye!")
-            return
-        if(file_Name == ""):
-            file_Name = "proj_A.asm"
-        try:
-            f = open(file_Name)
-            f.close()
-            break
-        except FileNotFoundError:
-            print('File does not exist')
+            file_Name = input("Please type input file name or enter for default (proj_A.asm), or q to quit:\n")
+            if(file_Name == "q"):
+                print("Bye!")
+                return
+            if(file_Name == ""):
+                file_Name = "proj_A.asm"
+            try:
+                f = open(file_Name)
+                f.close()
+                break
+            except FileNotFoundError:
+                print('File does not exist')
 
-    while(True):
-        file_NameOut = input("Please type output file name or enter for default (mc.txt), or q to quit:\n")
-        if(file_NameOut == "q"):
-            print("Bye!")
-            return
-        if(file_NameOut == ""):
-            file_NameOut = "mc.txt"
-            break
+    while (True):
 
-    while(True):
-        user_select = input("select one of the below or q to quit:\n" + \
-            "\ta) Diagnosis mode\n" +\
-            "\tb) Non-stop mode\n")
+            file_NameOut = input("Please type output file name or enter for default (mc.txt), or q to quit:\n")
+            if (file_NameOut == "q"):
+                print("Bye!")
+                return
+            if (file_NameOut == ""):
+                file_NameOut = "mc.txt"
+                break
 
-        if(user_select == "a"):
-            select = 1
-            break
-        
-        if(user_select == "b"):
-            select = 2
-            break
+    while (True):
 
-        if(user_select == "q"):
-            return
+            user_select = input("select one of the below or q to quit:\n" + \
+                                "\ta) Diagnosis mode\n" + \
+                                "\tb) Non-stop mode\n")
 
-        else:
-            print("ERROR: Please type valid input\n")
-            continue
+            if (user_select == "a"):
+                select = 1
+                break
+
+            if (user_select == "b"):
+                select = 2
+                break
+
+            if (user_select == "q"):
+                return
+
+            else:
+                print("ERROR: Please type valid input\n")
+                continue
+
+
 
     h = open(file_Name,"r")
 
