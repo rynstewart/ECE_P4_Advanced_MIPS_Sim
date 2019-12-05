@@ -87,7 +87,7 @@ def regNameInit(regName):
     regName.append('lo')
     regName.append('hi')
 
-def final_print(regval, PC, DIC):
+def final_print(regval, MEM, PC, DIC):
     ("REGISTERS:")
     print("-----------")
     for x in range(len(regval)):
@@ -128,15 +128,17 @@ def simulate(Instructions, f, debugMode):
     labelAddr = []
     regName = []
     PC = 0
+    DIC = 0
     regNameInit(regName)
     regval = [0]*26 #0-23 and lo, hi
     LO = 24
     HI = 25
     
     f = open(f,"w+")
-    
-    for line in Instructions:
+    lineCount = 0
+    while lineCount < len(Instructions):
         
+        line = Instructions[lineCount]
         if(debugMode == 1):
             while(True):
                 user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
@@ -166,69 +168,54 @@ def simulate(Instructions, f, debugMode):
             regval[int(line[0])] = regval[int(line[1])] + int(line[2])
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + line[2] + '; ' + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
-#            DIC += 1
+            DIC += 1
             PC += 1
-            i = 0
+
             if(debugMode == 1):
+                i = 0
                 if(i == 0):
-                    print("Cycle 1: Instruction Fetch" + '\n')
+                    print("Cycle 1: Instruction Fetch")
                     PC = PC + 4
                     f.write('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 1")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
+                    print("MemtoReg is now ")
+                    print("MemWrite is now ")
+                    print("Branch is now ")
+                    print("ALUSrc is now ")
+                    print("RegDst is now ")
+                    print("RegWrite is now ")
                     i += 1
                     continue
-
-
                 elif (i == 1):
                     print("Cycle 2: Decode")
                     PC = PC + 4
                     f.write('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 11")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-                    i += 1
-                    continue
-
-
+                    print("MemtoReg is now ")
+                    print("MemWrite is now ")
+                    print("Branch is now ")
+                    print("ALUSrc is now ")
+                    print("RegDst is now ")
+                    print("RegWrite is now ")
                 elif (i == 2):
                     print("Cycle 3: Execute")
                     PC = PC + 4
                     f.write('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 1")
-                    print("ALUSrcB is now 10")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-                    i += 1
-                    continue
-
-
+                    print("MemtoReg is now ")
+                    print("MemWrite is now ")
+                    print("Branch is now ")
+                    print("ALUSrc is now ")
+                    print("RegDst is now ")
+                    print("RegWrite is now ")
                 elif (i == 3):
                     print("Cycle 4: Memory ")
                     PC = PC + 4
                     f.write('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now 0    ")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now X")
-                    print("ALUSrcB is now X")
-                    print("RegDst is now 0")
-                    print("RegWrite is now 1")
+                    print("MemtoReg is now ")
+                    print("MemWrite is now ")
+                    print("Branch is now ")
+                    print("ALUSrc is now ")
+                    print("RegDst is now ")
+                    print("RegWrite is now ")
                     i = 0
-                    continue
-
 
         elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
             line = line.replace("xor","")
@@ -246,53 +233,56 @@ def simulate(Instructions, f, debugMode):
             PC += 1
             if(debugMode == 1):
 
-                while i<4:
-                    if(i == 0):
-                        print("Cycle 1: Instruction Fetch")
-                        PC = PC + 4
-                        f.write('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now ")
-                        print("MemWrite is now ")
-                        print("Branch is now ")
-                        print("ALUSrc is now ")
-                        print("RegDst is now ")
-                        print("RegWrite is now ")
-                    elif (i == 1):
-                        print("Cycle 2: Decode")
-                        PC = PC + 4
-                        f.write('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now ")
-                        print("MemWrite is now ")
-                        print("Branch is now ")
-                        print("ALUSrc is now ")
-                        print("RegDst is now ")
-                        print("RegWrite is now ")
-                    elif (i == 2):
-                        print("Cycle 3: Execute")
-                        PC = PC + 4
-                        f.write('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now ")
-                        print("MemWrite is now ")
-                        print("Branch is now ")
-                        print("ALUSrc is now ")
-                        print("RegDst is now ")
-                        print("RegWrite is now ")
-                    elif (i == 3):
-                        print("Cycle 4: Memory ")
-                        PC = PC + 4
-                        f.write('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now ")
-                        print("MemWrite is now ")
-                        print("Branch is now ")
-                        print("ALUSrc is now ")
-                        print("RegDst is now ")
-                        print("RegWrite is now ")
+                if(i == 0):
+                    print("Cycle 1: Instruction Fetch")
+                    PC = PC + 4
+                    f.write('PC is now at ' + str(PC) + '\n')
+                    print("MemtoReg is now ")
+                    print("MemWrite is now ")
+                    print("Branch is now ")
+                    print("ALUSrc is now ")
+                    print("RegDst is now ")
+                    print("RegWrite is now ")
+                    continue
+                    
+                elif (i == 1):
+                    print("Cycle 2: Decode")
+                    PC = PC + 4
+                    f.write('PC is now at ' + str(PC) + '\n')
+                    print("MemtoReg is now ")
+                    print("MemWrite is now ")
+                    print("Branch is now ")
+                    print("ALUSrc is now ")
+                    print("RegDst is now ")
+                    print("RegWrite is now ")
+                elif (i == 2):
+                    print("Cycle 3: Execute")
+                    PC = PC + 4
+                    f.write('PC is now at ' + str(PC) + '\n')
+                    print("MemtoReg is now ")
+                    print("MemWrite is now ")
+                    print("Branch is now ")
+                    print("ALUSrc is now ")
+                    print("RegDst is now ")
+                    print("RegWrite is now ")
+                elif (i == 3):
+                    print("Cycle 4: Memory ")
+                    PC = PC + 4
+                    f.write('PC is now at ' + str(PC) + '\n')
+                    print("MemtoReg is now ")
+                    print("MemWrite is now ")
+                    print("Branch is now ")
+                    print("ALUSrc is now ")
+                    print("RegDst is now ")
+                    print("RegWrite is now ")
 
         #addu
         elif(line[0:4] == "addu"): 
             line = line.replace("addu","")
             line = line.split(",")
             PC = PC + 4
+            DIC += 1
+
             regval[int(line[0])] = abs(regval[int(line[1])]) + abs(regval[int(line[2])])
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
@@ -308,6 +298,8 @@ def simulate(Instructions, f, debugMode):
                 regval[int(line[0])] = 0
 
             PC = PC + 4
+            DIC += 1
+
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n') 
@@ -316,17 +308,18 @@ def simulate(Instructions, f, debugMode):
             line = line.replace("ori", "")
             line = line.split(",")
             PC = PC + 4
-            regval[int(line[1])] = int(line[2],16) | regval[int(line[0])]
-            temp_val = format( int(regval[int(line[1])]),'032b')
+            DIC += 1
+            regval[int(line[0])] = (int(line[2],16) | regval[int(line[1])]) & 0x0000000000000000FFFFFFFFFFFFFFFF
 
-            f.write('Operation: $' + line[1] + '= $' + line[0] + "|"  + line[2])
+            f.write('Operation: $' + line[0] + '= $' + line[1] + " | "  + line[2] + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
-            f.write('Registers that have changed: ' + '$' + str( int(line[2],16) ) + '=' + str(regval[int(line[0])]) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + '=' + line[2] + '\n')
         
         #bne
         elif(line[0:3] == "bne"): # BNE
             line = line.replace("bne","")
             line = line.split(",")
+            DIC += 1
             if(regval[int(line[0])]!=regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
                     PC = line[2]
@@ -347,6 +340,7 @@ def simulate(Instructions, f, debugMode):
         elif(line[0:3] == "beq"): # Beq
             line = line.replace("beq","")
             line = line.split(",")
+            DIC += 1
             if(regval[int(line[0])]==regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
                     PC = line[2]
@@ -368,6 +362,7 @@ def simulate(Instructions, f, debugMode):
             line= line.replace(")","")
             line= line.split(",")
             PC = PC + 4
+            DIC += 1
             MEM_val = MEM[ int(line[1]) + regval[int(line[2])] ] & 0x0000000000000000FFFFFFFFFFFFFFFF
             regval[int(line[0])]= MEM_val
             f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
@@ -380,6 +375,7 @@ def simulate(Instructions, f, debugMode):
             line= line.replace(")","")
             line= line.split(",")
             PC = PC + 4
+            DIC += 1
             MEM_val = regval[int(line[0])] & 0x0000000000000000FFFFFFFFFFFFFFFF
             MEM[ int(line[1]) + regval[int(line[2])] ] = regval[int(line[0])]
             f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
@@ -390,6 +386,7 @@ def simulate(Instructions, f, debugMode):
             line = line.replace("sub","")
             line = line.split(",")
             PC = PC + 4
+            DIC += 1
             regval[int(line[0])] = regval[int(line[1])] - regval[int(line[2])]
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
@@ -399,10 +396,15 @@ def simulate(Instructions, f, debugMode):
             line = line.replace("sll","")
             line = line.split(",")
             PC = PC + 4
+            DIC += 1
             regval[int(line[0])] = regval[int(line[1])] << int(line[2]) & 0x0000000000000000FFFFFFFFFFFFFFFF
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
-            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')     
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+        
+        lineCount += 1
+
+    final_print(regval,MEM, PC, DIC)    
 
     f.close()
 
