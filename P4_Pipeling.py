@@ -1,7 +1,5 @@
 import time
 
-
-##NEED: ori, addi, sw, beq, slt, addu, sub, xor, lw, slt, bne
 def twoComplement(string):
     if(string[0] == '1'):
         imm = 65535 - int(string, 2)
@@ -20,15 +18,14 @@ class Statistics:
         self.threeCycles= 0      # How many instr that took 3 cycles to execute
         self.fourCycles = 0      #                          4 cycles
         self.fiveCycles = 0      #                          5 cycles
-    #self.DataHazard = 0      #number of data hazards
-    #self.ControlHazard = 0   #number of control hazards
-    #self.NOPcount = 0        #keeps track of NOP
-    #self.flushCount = 0      #keeps track of flush
-    #self.stallCount = 0      #keeps track of stall count
+        #self.DataHazard = 0      #number of data hazards
+        #self.ControlHazard = 0   #number of control hazards
+        #self.NOPcount = 0        #keeps track of NOP
+        #self.flushCount = 0      #keeps track of flush
+        #self.stallCount = 0      #keeps track of stall count
         self.debugMode = debugMode
     
-    def log(self,I,name,cycle,pc):
-        self.I = I
+    def log(self,name,cycle,pc):
         self.name = name
         self.pc = pc
         self.cycle +=  cycle
@@ -121,6 +118,16 @@ def final_print(regval, MEM, PC, DIC):
             count = 0
             print("\n")
 
+def get_imm(instr, index):
+
+    #first check base
+    if '0x' in instr[index]:
+        imm = int(instr[index][2:],16)
+    else:
+        imm = int(instr[index])
+
+    return imm
+
 def simulate(Instructions, f, debugMode):
     MEM = [0]*12288 #intialize array to all 0s for 0x3000 indices
     labelIndex = []
@@ -133,7 +140,9 @@ def simulate(Instructions, f, debugMode):
     regval = [0]*26 #0-23 and lo, hi
     LO = 24
     HI = 25
-    
+    stats = Statistics(debugMode)
+    saveJumpLabel(Instructions,labelIndex,labelName, labelAddr)
+
     f = open(f,"w+")
     lineCount = 0
     while lineCount < len(Instructions):
@@ -160,16 +169,21 @@ def simulate(Instructions, f, debugMode):
         line = line.replace("$","")
         line = line.replace(" ","")
         line = line.replace("zero","0") # assembly can also use both $zero and $0
+        
 
         if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
             #f.write(line)
+            #breakpoint()
             line = line.replace("addi","")
             line = line.split(",")
-            regval[int(line[0])] = regval[int(line[1])] + int(line[2])
+            imm = get_imm(line,2)
+            regval[int(line[0])] = regval[int(line[1])] + imm
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + line[2] + '; ' + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
             DIC += 1
             PC += 1
+            if debugMode != 1:
+                stats.log("addi", 4, PC)
             if(debugMode == 1):
                 i = 0
                 if(i == 0):
@@ -228,6 +242,8 @@ def simulate(Instructions, f, debugMode):
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
             DIC += 1
             PC += 1
+            if debugMode != 1:
+                stats.log("xor", 4, PC)
             if(debugMode == 1):
 
                 if(i == 0):
@@ -279,6 +295,8 @@ def simulate(Instructions, f, debugMode):
             line = line.split(",")
             PC = PC + 4
             DIC += 1
+            if debugMode != 1:
+                stats.log("addu", 4, PC)
 
             regval[int(line[0])] = abs(regval[int(line[1])]) + abs(regval[int(line[2])])
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
@@ -296,6 +314,8 @@ def simulate(Instructions, f, debugMode):
 
             PC = PC + 4
             DIC += 1
+            if debugMode != 1:
+                stats.log("slt", 4, PC)
 
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
@@ -304,9 +324,12 @@ def simulate(Instructions, f, debugMode):
         elif(line[0:3] == "ori"):
             line = line.replace("ori", "")
             line = line.split(",")
+            imm = get_imm(line,2)
             PC = PC + 4
             DIC += 1
-            regval[int(line[0])] = (int(line[2],16) | regval[int(line[1])]) & 0x0000000000000000FFFFFFFFFFFFFFFF
+            if debugMode != 1:
+                stats.log("ori", 4, PC)
+            regval[int(line[0])] = (imm | regval[int(line[1])]) & 0xFFFFFFFF
 
             f.write('Operation: $' + line[0] + '= $' + line[1] + " | "  + line[2] + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
@@ -317,15 +340,20 @@ def simulate(Instructions, f, debugMode):
             line = line.replace("bne","")
             line = line.split(",")
             DIC += 1
+            stats.log("bne", 3, PC)
             if(regval[int(line[0])]!=regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
-                    PC = line[2]
-                    lineCount = line[2]
+                    PC = int(line[2])*4
+                    lineCount = int(line[2])
+                    if debugMode != 1:
+                        stats.log("bne", 3, PC)
                     f.write('PC is now at ' + str(line[2]) + '\n')
                 else: # Jumping to label
                     for i in range(len(labelName)):
                         if(labelName[i] == line[2]):
                             PC = labelAddr[i]
+                            if debugMode != 1:
+                                stats.log("bne", 3, PC)
                             lineCount = labelIndex[i]
                             f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
@@ -340,41 +368,53 @@ def simulate(Instructions, f, debugMode):
             DIC += 1
             if(regval[int(line[0])]==regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
-                    PC = line[2]
-                    lineCount = line[2]
+                    PC = int(line[2])*4
+                    lineCount = int(line[2])
+                    if debugMode != 1:
+                        stats.log("beq", 3, PC)
                     f.write('PC is now at ' + str(line[2]) + '\n')
                 else: # Jumping to label
                     for i in range(len(labelName)):
                         if(labelName[i] == line[2]):
                             PC = labelAddr[i]
+                            if debugMode != 1:
+                                stats.log("beq", 3, PC)
                             lineCount = labelIndex[i]
                             f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
                 continue
             f.write('No Registers have changed. \n')
 
-        elif(line[0:2] == "lw"):
+        elif(line[0:2] =="lw" and not('lw_loop' in line)):
             line= line.replace("lw","")
             line= line.replace("(",",")
             line= line.replace(")","")
             line= line.split(",")
             PC = PC + 4
             DIC += 1
-            MEM_val = MEM[ int(line[1]) + regval[int(line[2])] ] & 0x0000000000000000FFFFFFFFFFFFFFFF
+            imm = get_imm(line, 1)
+
+            if debugMode != 1:
+                stats.log("lw", 5, PC)
+            MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
             regval[int(line[0])]= MEM_val
             f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
-        elif(line[0:2] == "sw"):
+        elif(line[0:2] =="sw" and not('sw_' in line)):
             line= line.replace("sw","")
             line= line.replace("(",",")
             line= line.replace(")","")
             line= line.split(",")
             PC = PC + 4
             DIC += 1
-            MEM_val = regval[int(line[0])] & 0x0000000000000000FFFFFFFFFFFFFFFF
-            MEM[ int(line[1]) + regval[int(line[2])] ] = regval[int(line[0])]
+            #breakpoint()
+            imm = get_imm(line, 1)
+            if debugMode != 1:
+                stats.log("sw", 4, PC)
+            MEM_val = regval[int(line[0])] & 0xFFFFFFFFF
+            MEM[ regval[int(line[2])] + imm ] = MEM_val
             f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: None\n')
@@ -384,6 +424,8 @@ def simulate(Instructions, f, debugMode):
             line = line.split(",")
             PC = PC + 4
             DIC += 1
+            if debugMode != 1:
+                stats.log("sub", 4, PC)
             regval[int(line[0])] = regval[int(line[1])] - regval[int(line[2])]
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
@@ -394,7 +436,10 @@ def simulate(Instructions, f, debugMode):
             line = line.split(",")
             PC = PC + 4
             DIC += 1
-            regval[int(line[0])] = regval[int(line[1])] << int(line[2]) & 0x0000000000000000FFFFFFFFFFFFFFFF
+            imm = get_imm(line,2)
+            if debugMode != 1:
+                stats.log("sll", 4, PC)
+            regval[int(line[0])] = (regval[int(line[1])] << imm) & 0xFFFFFFFF
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
@@ -402,6 +447,8 @@ def simulate(Instructions, f, debugMode):
         lineCount += 1
 
     final_print(regval,MEM, PC, DIC)    
+    print("\n************ FINAL CYCLE INFO ************\n")
+    stats.exitSim()
 
     f.close()
 
@@ -421,12 +468,12 @@ def readIn(s):
 def main():
     
     while(True):
-        file_Name = input("Please type input file name or enter for default (mips1.asm), or q to quit:\n")
+        file_Name = input("Please type input file name or enter for default (proj_A.asm), or q to quit:\n")
         if(file_Name == "q"):
             print("Bye!")
             return
         if(file_Name == ""):
-            file_Name = "mips1.asm"
+            file_Name = "proj_A.asm"
         try:
             f = open(file_Name)
             f.close()
