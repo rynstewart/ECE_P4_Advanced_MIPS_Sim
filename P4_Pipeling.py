@@ -210,12 +210,11 @@ def simulate(Instructions, f, debugMode):
             line = line.replace("ori", "")
             line = line.split(",")
             PC = PC + 4
-            regval[int(line[1])] = int(line[2],16) | regval[int(line[0])]
-            temp_val = format( int(regval[int(line[1])]),'032b')
+            regval[int(line[0])] = (int(line[2],16) | regval[int(line[1])]) & 0x0000000000000000FFFFFFFFFFFFFFFF
 
-            f.write('Operation: $' + line[1] + '= $' + line[0] + "|"  + line[2])
+            f.write('Operation: $' + line[0] + '= $' + line[1] + " | "  + line[2] + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
-            f.write('Registers that have changed: ' + '$' + str( int(line[2],16) ) + '=' + str(regval[int(line[0])]) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + '=' + line[2] + '\n')
         
         #bne
         elif(line[0:3] == "bne"): # BNE
