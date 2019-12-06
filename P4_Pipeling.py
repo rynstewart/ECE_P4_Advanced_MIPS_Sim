@@ -205,58 +205,20 @@ def simulate(Instructions, f, debugMode):
                     continue
 
                 elif (i == 1):
-<<<<<<< Updated upstream
-                    print("Cycle 2: Decode" + '\n')
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 11")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0" + '\n')
-=======
                     print("Cycle 2: Decode" + '\n' )
                     multi("X", "0", "0", "0", "11", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 2):
-<<<<<<< Updated upstream
-                    print("Cycle 3: Execute" + '\n')
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 1")
-                    print("ALUSrcB is now 10")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0" + '\n')
-=======
                     print("Cycle 3: Execute" + '\n' )
                     multi("X", "0", "0", "1", "10", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
-<<<<<<< Updated upstream
-                    #PC =
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now 0")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now X")
-                    print("ALUSrcB is now X")
-                    print("RegDst is now 0")
-                    print("RegWrite is now 1" + '\n')
-=======
                     multi("0", "0", "0", "X", "X", "0", "1")
->>>>>>> Stashed changes
                     i = 0
                     stats.log("addi", 4, PC)
 
@@ -283,74 +245,26 @@ def simulate(Instructions, f, debugMode):
 
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 1")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "0", "1", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
-<<<<<<< Updated upstream
-                    # PC = PC + 4
-                    # print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 11")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "0", "11", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 1")
-                    print("ALUSrcB is now 0")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "1", "0", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now 0")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now X")
-                    print("ALUSrcB is now X")
-                    print("RegDst is now 1")
-                    print("RegWrite is now 1")
-=======
                     multi("0", "0", "0", "X", "X", "1", "1")
->>>>>>> Stashed changes
                     i = 0
                     stats.log("xor", 4, PC)
 
@@ -372,75 +286,25 @@ def simulate(Instructions, f, debugMode):
 
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 1")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "0", "1", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
-<<<<<<< Updated upstream
-                    # PC = PC + 4
-                    # print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 11")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "0", "11", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 1")
-                    print("ALUSrcB is now 0")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "1", "0", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now 0")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now X")
-                    print("ALUSrcB is now X")
-                    print("RegDst is now 1")
-                    print("RegWrite is now 1")
-                    i = 0
-                    stats.log("addu", 4, PC)
-        #slt
-=======
                     multi("0", "0", "0", "X", "X", "1", "1")
                     i = 0
                     stats.log("addu", 4, PC)
@@ -489,7 +353,6 @@ def simulate(Instructions, f, debugMode):
                     stats.log("sltu", 4, PC)
 
 
->>>>>>> Stashed changes
         elif(line[0:3] == "slt"):
             line = line.replace("slt","")
             line = line.split(",")
@@ -510,74 +373,25 @@ def simulate(Instructions, f, debugMode):
 
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 1")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "0", "1", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
-<<<<<<< Updated upstream
-                    # PC = PC + 4
-                    # print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 11")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "0", "11", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
-
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 1")
-                    print("ALUSrcB is now 0")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "1", "0", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now 0")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now X")
-                    print("ALUSrcB is now X")
-                    print("RegDst is now 1")
-                    print("RegWrite is now 1")
-=======
                     multi("0", "0", "0", "X", "X", "1", "1")
->>>>>>> Stashed changes
                     i = 0
                     stats.log("slt", 4, PC)
 
@@ -597,74 +411,25 @@ def simulate(Instructions, f, debugMode):
             if(debugMode == 1):
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 1")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "0", "1", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n')
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 0")
-                    print("ALUSrcB is now 11")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "0", "11", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n')
-<<<<<<< Updated upstream
-                    #PC = PC + 4
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now X")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now 1")
-                    print("ALUSrcB is now 10")
-                    print("RegDst is now X")
-                    print("RegWrite is now 0")
-=======
                     multi("X", "0", "0", "1", "10", "X", "0")
->>>>>>> Stashed changes
                     i += 1
                     continue
 
                 elif (i == 3):
-<<<<<<< Updated upstream
-                    print("Cycle 4: Memory" + '\n' )
-                    #PC =
-                    #print('PC is now at ' + str(PC) + '\n')
-                    print("MemtoReg is now 0")
-                    print("MemWrite is now 0")
-                    print("Branch is now 0")
-                    print("ALUSrcA is now X")
-                    print("ALUSrcB is now X")
-                    print("RegDst is now 0")
-                    print("RegWrite is now 1")
-=======
                     print("Cycle 4: Memory" + '\n')
                     multi("0", "0", "0", "X", "X", "0", "1")
->>>>>>> Stashed changes
                     i = 0
                     stats.log("ori", 4, PC)
         #bne
@@ -672,9 +437,6 @@ def simulate(Instructions, f, debugMode):
             line = line.replace("bne","")
             line = line.split(",")
             DIC += 1
-<<<<<<< Updated upstream
-            stats.log("bne", 3, PC)
-=======
 
             if (debugMode == 1):
                 if (i == 0):
@@ -697,7 +459,6 @@ def simulate(Instructions, f, debugMode):
                     i = 0
                     stats.log("bne", 3, PC)
 
->>>>>>> Stashed changes
             if(regval[int(line[0])]!=regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
                     PC = int(line[2])*4
@@ -715,11 +476,16 @@ def simulate(Instructions, f, debugMode):
                             f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
             f.write('No Registers have changed. \n')
+
+        #beq
+        elif(line[0:3] == "beq"): # Beq
+            line = line.replace("beq","")
+            line = line.split(",")
+            DIC += 1
+
             if (debugMode == 1):
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
-                    # PC = PC + 4
-                    # print('PC is now at ' + str(PC) + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
                     i += 1
                     continue
@@ -734,18 +500,8 @@ def simulate(Instructions, f, debugMode):
                     print("Cycle 3: Execute" + '\n')
                     multi("X", "0", "1", "1", "0", "X", "0")
                     i = 0
-<<<<<<< Updated upstream
-                    stats.log("bne", 4, PC)
-                continue
-=======
                     stats.log("beq", 3, PC)
->>>>>>> Stashed changes
 
-        #beq
-        elif(line[0:3] == "beq"): # Beq
-            line = line.replace("beq","")
-            line = line.split(",")
-            DIC += 1
             if(regval[int(line[0])]==regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
                     PC = int(line[2])*4
@@ -762,49 +518,6 @@ def simulate(Instructions, f, debugMode):
                             lineCount = labelIndex[i]
                             f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
-
-                if (debugMode == 1):
-                    if (i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 1")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i = 0
-                        stats.log("beq", 4, PC)
 
                 continue
 
