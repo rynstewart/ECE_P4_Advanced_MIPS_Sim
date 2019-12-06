@@ -1,14 +1,5 @@
 import time
 
-def twoComplement(string):
-    if(string[0] == '1'):
-        imm = 65535 - int(string, 2)
-        imm +=1
-        imm = -imm
-    else:
-        imm = int(string, 2)
-    return imm
-
 class Statistics:
     def __init__(self, debugMode):
         self.I= ""               #current instruction being executed
@@ -85,9 +76,10 @@ def regNameInit(regName):
     regName.append('hi')
 
 def final_print(regval, MEM, PC, DIC):
-    ("REGISTERS:")
+    print("REGISTERS:")
     print("-----------")
     for x in range(len(regval)):
+
         if(x == 24):
             print("lo: ", hex(regval[x]))
         elif(x == 25):
@@ -97,27 +89,29 @@ def final_print(regval, MEM, PC, DIC):
     print("PC: ", hex(PC))
     print("DIC: ", hex(DIC))
 
-    print("\n")
-    print("Used Memory values:\n")
-    print("            ", end="")
+    print("\n*************************************** Used Memory values ***************************************\n")
+    print("offset:     ", end="")
     for x in range(0,8,1):
         print("0x"+ format((x*4),"08x"), end=" ")
     print("\n")
     print("--------------------------------------------------------------------------------------------------",end="")
     count = 0
     print("\n")
-    for x in range(0x2003,0x2100,4):
-        if((x-0x3)%0x20==0):
-            print("0x"+format(x-0x3,"08x") + '|', end=" ")
-        print("0x", end="")
-        for y in range(0,4,1):
-            print(format(MEM[x-y], "02x"), end="")
-        print(" ", end = "")
-        count += 1
-        if(count == 8):
-            count = 0
-            print("\n")
+    y=0
+    for x in range(0x2000,0x2041,1):
+        if((x-0x2000) % 0x20 ==0):
+            print("0x" +format(0x2000+ y,"08x") + '|', end=" ")
+            y += 0x20
 
+        if count == 8:
+            count = 0
+            print(" ", end = "\n")
+        if((x-0x2000)%4==0):  
+            print('0x'+format(MEM[x], "08x"), end=" ")
+            count += 1 
+
+
+        
 def get_imm(instr, index):
 
     #first check base
@@ -151,6 +145,10 @@ def simulate(Instructions, f, debugMode):
     while lineCount < len(Instructions):
         
         line = Instructions[lineCount]
+
+        #if "$8" in line:
+            #breakpoint()
+
         if(debugMode == 1):
             while(True):
                 user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
@@ -176,23 +174,20 @@ def simulate(Instructions, f, debugMode):
 
         if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
             #f.write(line)
-            #breakpoint()
             line = line.replace("addi","")
             line = line.split(",")
             imm = get_imm(line,2)
-            regval[int(line[0])] = regval[int(line[1])] + imm
+            regval[int(line[0])] = (regval[int(line[1])] + imm)  & 0xFFFFFFFF
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + line[2] + '; ' + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
             DIC += 1
-            PC += 1
+            PC += 4
             if debugMode != 1:
                 stats.log("addi", 4, PC)
 
             if(debugMode == 1):
-                #breakpoint()
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
-                    PC = PC + 4
                     print('PC is now at ' + str(PC) + '\n')
                     print("MemtoReg is now X")
                     print("MemWrite is now 0")
@@ -255,7 +250,7 @@ def simulate(Instructions, f, debugMode):
             x = regval[int(line[1])]
             y = regval[int(line[2])]
             z = int(x)^int(y)
-            regval[int(line[0])] = z
+            regval[int(line[0])] = z & 0xFFFFFFFF
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' ^ $' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
@@ -334,7 +329,7 @@ def simulate(Instructions, f, debugMode):
             if debugMode != 1:
                 stats.log("addu", 4, PC)
 
-            regval[int(line[0])] = abs(regval[int(line[1])]) + abs(regval[int(line[2])])
+            regval[int(line[0])] = (abs(regval[int(line[1])]) + abs(regval[int(line[2])])) & 0xFFFFFFFF
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
@@ -486,7 +481,6 @@ def simulate(Instructions, f, debugMode):
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + '=' + line[2] + '\n')
             if(debugMode == 1):
-                #breakpoint()
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     #PC = PC + 4
@@ -564,10 +558,8 @@ def simulate(Instructions, f, debugMode):
                             lineCount = labelIndex[i]
                             f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
-                continue
             f.write('No Registers have changed. \n')
             if (debugMode == 1):
-                # breakpoint()
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     # PC = PC + 4
@@ -609,6 +601,7 @@ def simulate(Instructions, f, debugMode):
                     print("RegWrite is now 0")
                     i = 0
                     stats.log("bne", 4, PC)
+                continue
 
         #beq
         elif(line[0:3] == "beq"): # Beq
@@ -633,7 +626,6 @@ def simulate(Instructions, f, debugMode):
                 f.write('No Registers have changed. \n')
 
                 if (debugMode == 1):
-                    # breakpoint()
                     if (i == 0):
                         print("Cycle 1: Instruction Fetch" + '\n')
                         # PC = PC + 4
@@ -676,7 +668,7 @@ def simulate(Instructions, f, debugMode):
                         i = 0
                         stats.log("beq", 4, PC)
 
-                #continue
+                continue
 
 
         elif(line[0:2] =="lw" and not('lw_loop' in line)):
@@ -687,10 +679,14 @@ def simulate(Instructions, f, debugMode):
             PC = PC + 4
             DIC += 1
             imm = get_imm(line, 1)
-
             if debugMode != 1:
                 stats.log("lw", 5, PC)
             MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
+            bin_str = format(MEM_val, '32b')
+            if bin_str[0] == '1':
+                MEM_val = MEM_val ^ 0xffffffff
+                MEM_val +=1
+                MEM_val = -MEM_val
 
             regval[int(line[0])]= MEM_val
             f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
@@ -698,7 +694,6 @@ def simulate(Instructions, f, debugMode):
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
             if (debugMode == 1):
-                # breakpoint()
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     # PC = PC + 4
@@ -768,6 +763,8 @@ def simulate(Instructions, f, debugMode):
                     i = 0
                     stats.log("lw", 4, PC)
 
+                
+
         elif(line[0:2] =="sw" and not('sw_' in line)):
 
             line= line.replace("sw","")
@@ -776,17 +773,15 @@ def simulate(Instructions, f, debugMode):
             line= line.split(",")
             PC = PC + 4
             DIC += 1
-            #breakpoint()
             imm = get_imm(line, 1)
             if debugMode != 1:
                 stats.log("sw", 4, PC)
-            MEM_val = regval[int(line[0])] & 0xFFFFFFFFF
+            MEM_val = regval[int(line[0])] 
             MEM[ regval[int(line[2])] + imm ] = MEM_val
             f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: None\n')
             if (debugMode == 1):
-                # breakpoint()
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     # PC = PC + 4
@@ -851,7 +846,7 @@ def simulate(Instructions, f, debugMode):
             DIC += 1
             if debugMode != 1:
                 stats.log("sub", 4, PC)
-            regval[int(line[0])] = regval[int(line[1])] - regval[int(line[2])]
+            regval[int(line[0])] = (regval[int(line[1])] - regval[int(line[2])])  & 0xFFFFFFFF
             f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
@@ -989,7 +984,7 @@ def simulate(Instructions, f, debugMode):
         lineCount += 1
 
     final_print(regval,MEM, PC, DIC)    
-    print("\n************ FINAL CYCLE INFO ************\n")
+    print("\n\n**************************************** FINAL CYCLE INFO ****************************************\n")
     stats.exitSim()
 
     f.close()
@@ -1057,7 +1052,6 @@ def main():
     asm = h.readlines()
     for item in range(asm.count('\n')): # Remove all empty lines '\n'
         asm.remove('\n')
-    #breakpoint()
     simulate(asm, file_NameOut, select)
 
 
