@@ -215,8 +215,23 @@ elif(user_input=='c'): #updating cache needs to be fixed
                  print_way= temp_index
              HorM="Miss"
 
-             #for i in range(8):                                               #updating Cache
-                 #Cache[(block_index*8)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+             if(set_index==0):
+                 for i in range(8):                                               #updating Cache
+                     Cache[(print_way*8)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+                     cache_block=print_way*1
+             elif(set_index==1):
+                 for i in range(8):                                               #updating Cache
+                     Cache[((print_way*8)+16)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+                     cache_block= (print_way*1)+2
+             elif(set_index==2):
+                 for i in range(8):                                               #updating Cache
+                     Cache[((print_way*8)+32)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+                     cache_block= (print_way*1)+4
+             elif(set_index==3):
+                 for i in range(8):                                               #updating Cache
+                     Cache[((print_way*8)+48)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+                     cache_block= (print_way*1)+6
+                 
 
 
          print("Looking at set: "+str(set_index)+ " ,Way: "+str(print_way))
@@ -224,6 +239,9 @@ elif(user_input=='c'): #updating cache needs to be fixed
          print("valid bit: " + str(valid_bit))
          print("tag bit:" + str(tag_bits))
          print("Hit or Miss: "+ HorM)
+         print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
+         print("Bringing into block " + str(cache_block) + " of the cache\n")
+         print("cache: "+ str(Cache)+"\n")
 
          print("\n")
 
