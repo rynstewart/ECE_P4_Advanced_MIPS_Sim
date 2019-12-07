@@ -226,8 +226,6 @@ def simulate(Instructions, f, debugMode):
         elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
             line = line.replace("xor","")
             line = line.split(",")
-            #PC = PC + 4
-            #x = format(int(line[1]),'032b')^format(int(line[2]),'032b')
             x = regval[int(line[1])]
             y = regval[int(line[2])]
             z = int(x)^int(y)
@@ -237,7 +235,7 @@ def simulate(Instructions, f, debugMode):
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
             DIC += 1
 
-            PC += 1
+            PC += 4
             if debugMode != 1:
                 stats.log("xor", 4, PC)
 
@@ -441,8 +439,6 @@ def simulate(Instructions, f, debugMode):
             if (debugMode == 1):
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
-                    # PC = PC + 4
-                    # print('PC is now at ' + str(PC) + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
                     i += 1
                     continue
@@ -475,7 +471,9 @@ def simulate(Instructions, f, debugMode):
                             lineCount = labelIndex[i]
                             f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
+                continue
             f.write('No Registers have changed. \n')
+
 
         #beq
         elif(line[0:3] == "beq"): # Beq
@@ -502,6 +500,7 @@ def simulate(Instructions, f, debugMode):
                     i = 0
                     stats.log("beq", 3, PC)
 
+
             if(regval[int(line[0])]==regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
                     PC = int(line[2])*4
@@ -509,6 +508,9 @@ def simulate(Instructions, f, debugMode):
                     if debugMode != 1:
                         stats.log("beq", 3, PC)
                     f.write('PC is now at ' + str(line[2]) + '\n')
+                    f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
+                    f.write('No Registers have changed. \n')
+                    continue
                 else: # Jumping to label
                     for i in range(len(labelName)):
                         if(labelName[i] == line[2]):
@@ -698,6 +700,8 @@ def simulate(Instructions, f, debugMode):
 
         lineCount += 1
 
+    PC = (len(Instructions)-len(labelName)) * 4 
+
     final_print(regval,MEM, PC, DIC)    
     print("\n\n**************************************** FINAL CYCLE INFO ****************************************\n")
     stats.exitSim()
@@ -718,70 +722,49 @@ def readIn(s):
     return text
 
 def main():
-
-    choice_Name = input("Please type 1 for Processor Simulation of MC, 2 for Processor Simulation of PC and 3 for CacheSim, or q for quit" + '\n')
-
-    if (choice_Name == "1"):
-        print("You have chosen Processor Simulation of MC" + '\n')
-
-    elif(choice_Name == "2"):
-        print("You have chosen Processor Simulation of PC" + '\n')
-
-    elif(choice_Name == "3"):
-        print("You have chosen CacheSim")
-
-    elif(choice_Name == "q"):
-        return
-    else:
-        print("Error enter valid input")
-        return
     
     while(True):
-            file_Name = input("Please type input file name or enter for default (proj_A.asm), or q to quit:\n")
-            if(file_Name == "q"):
-                print("Bye!")
-                return
-            if(file_Name == ""):
-                file_Name = "proj_A.asm"
-            try:
-                f = open(file_Name)
-                f.close()
-                break
-            except FileNotFoundError:
-                print('File does not exist')
+        file_Name = input("Please type input file name or enter for default (proj_A.asm), or q to quit:\n")
+        if(file_Name == "q"):
+            print("Bye!")
+            return
+        if(file_Name == ""):
+            file_Name = "proj_A.asm"
+        try:
+            f = open(file_Name)
+            f.close()
+            break
+        except FileNotFoundError:
+            print('File does not exist')
 
-    while (True):
+    while(True):
+        file_NameOut = input("Please type output file name or enter for default (mc.txt), or q to quit:\n")
+        if(file_NameOut == "q"):
+            print("Bye!")
+            return
+        if(file_NameOut == ""):
+            file_NameOut = "mc.txt"
+            break
 
-            file_NameOut = input("Please type output file name or enter for default (mc.txt), or q to quit:\n")
-            if (file_NameOut == "q"):
-                print("Bye!")
-                return
-            if (file_NameOut == ""):
-                file_NameOut = "mc.txt"
-                break
+    while(True):
+        user_select = input("select one of the below or q to quit:\n" + \
+            "\ta) Diagnosis mode\n" +\
+            "\tb) Non-stop mode\n")
 
-    while (True):
+        if(user_select == "a"):
+            select = 1
+            break
+        
+        if(user_select == "b"):
+            select = 2
+            break
 
-            user_select = input("select one of the below or q to quit:\n" + \
-                                "\ta) Diagnosis mode\n" + \
-                                "\tb) Non-stop mode\n")
+        if(user_select == "q"):
+            return
 
-            if (user_select == "a"):
-                select = 1
-                break
-
-            if (user_select == "b"):
-                select = 2
-                break
-
-            if (user_select == "q"):
-                return
-
-            else:
-                print("ERROR: Please type valid input\n")
-                continue
-
-
+        else:
+            print("ERROR: Please type valid input\n")
+            continue
 
     h = open(file_Name,"r")
 
