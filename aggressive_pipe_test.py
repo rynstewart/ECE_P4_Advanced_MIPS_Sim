@@ -281,7 +281,13 @@ def simulate(Instructions, f, debugMode):
             
 
             if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
-                #f.write(line)
+                if(debugMode == 1 and loop == 1):
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
+                        continue
+                    DIC += 1
+                    not_Done = True
+
                 line = line.replace("addi","")
                 line = line.split(",")
                 imm = get_imm(line,2)
@@ -294,15 +300,16 @@ def simulate(Instructions, f, debugMode):
                 if(loop == 0):
                     instr_cycles.append(["addi", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
                     stats.log("addi", 4, PC)
+
+
+            elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
                     DIC += 1
                     not_Done = True
-
-
-            elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
+                
                 line = line.replace("xor","")
                 line = line.split(",")
                 x = regval[int(line[1])]
@@ -319,16 +326,16 @@ def simulate(Instructions, f, debugMode):
                     stats.log("xor", 4, PC)
                 PC += 4
 
+
+            #addu
+            elif(line[0:4] == "addu"): 
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
                     DIC += 1
                     not_Done = True
-
-
-            #addu
-            elif(line[0:4] == "addu"): 
+                
                 line = line.replace("addu","")
                 line = line.split(",")
                 if(debugMode != 1):
@@ -341,6 +348,9 @@ def simulate(Instructions, f, debugMode):
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+                
+
+            elif(line[0:4] == "sltu"):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
@@ -348,7 +358,6 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                     not_Done = True
 
-            elif(line[0:4] == "sltu"):
                 line = line.replace("sltu","")
                 line = line.split(",")
                 if(abs(regval[int(line[1])]) < abs(regval[int(line[2])])):
@@ -366,6 +375,9 @@ def simulate(Instructions, f, debugMode):
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
+
+
+            elif(line[0:3] == "slt"):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
@@ -373,8 +385,6 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                     not_Done = True
 
-
-            elif(line[0:3] == "slt"):
                 line = line.replace("slt","")
                 line = line.split(",")
                 if(regval[int(line[1])] < regval[int(line[2])]):
@@ -391,6 +401,9 @@ def simulate(Instructions, f, debugMode):
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
+
+
+            elif(line[0:3] == "ori"):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
@@ -398,7 +411,6 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                     not_Done = True
 
-            elif(line[0:3] == "ori"):
                 line = line.replace("ori", "")
                 line = line.split(",")
                 imm = get_imm(line,2)
@@ -412,12 +424,6 @@ def simulate(Instructions, f, debugMode):
                 f.write('Operation: $' + line[0] + '= $' + line[1] + " | "  + line[2] + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + '=' + line[2] + '\n')
-                if(debugMode == 1 and loop == 1):
-                    if not_Done:
-                        not_Done = cycle_tracker(instr_cycles, DIC)
-                        continue
-                    DIC += 1
-                    not_Done = True
 
             #bne
             elif(line[0:3] == "bne"): # BNE
@@ -429,14 +435,15 @@ def simulate(Instructions, f, debugMode):
                     instr_cycles.append(["bne", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
                     stats.log("bne", 3, PC)
 
-                if (debugMode == 1 and loop == 1):
-                    if not_Done:
-                        not_Done = cycle_tracker(instr_cycles, DIC)
-                        continue
-                    DIC += 1
-                    not_Done = True
-
                 if(regval[int(line[0])]!=regval[int(line[1])]):
+                    
+                    if (debugMode == 1 and loop == 1):
+                        if not_Done:
+                            not_Done = cycle_tracker(instr_cycles, DIC)
+                            continue
+                        DIC += 1
+                        not_Done = True
+
                     if(line[2].isdigit()): # First,test to see if it's a label or a integer
                         PC = int(line[2])*4
                         lineCount = int(line[2])
@@ -463,16 +470,15 @@ def simulate(Instructions, f, debugMode):
                     instr_cycles.append(["beq", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
                     stats.log("beq", 3, PC)
 
-                if (debugMode == 1 and loop == 1):
-                    if not_Done:
-                        not_Done = cycle_tracker(instr_cycles, DIC)
-                        continue
-                    DIC += 1
-                    not_Done = True
-
                 if(regval[int(line[0])]==regval[int(line[1])]):
-                    if loop == 1:
-                        breakpoint()
+                    
+                    if (debugMode == 1 and loop == 1):
+                        if not_Done:
+                            not_Done = cycle_tracker(instr_cycles, DIC)
+                            continue
+                        DIC += 1
+                        not_Done = True
+
                     if(line[2].isdigit()): # First,test to see if it's a label or a integer
                         PC = int(line[2])*4
                         lineCount = int(line[2])
@@ -487,12 +493,23 @@ def simulate(Instructions, f, debugMode):
                                 lineCount = labelIndex[i]
                                 f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                                 f.write('No Registers have changed. \n')
-                                continue
+                                break
+                        continue
+                                
+
                 f.write('No Registers have changed. \n')
 
 
 
             elif(line[0:2] =="lw" and not('lw_loop' in line)):
+                
+                if (debugMode == 1 and loop == 1):
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
+                        continue
+                    DIC += 1
+                    not_Done = True
+                
                 line= line.replace("lw","")
                 line= line.replace("(",",")
                 line= line.replace(")","")
@@ -515,14 +532,14 @@ def simulate(Instructions, f, debugMode):
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
+            elif(line[0:2] =="sw" and not('sw_' in line)):
+                
                 if (debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
                     DIC += 1
                     not_Done = True
-                    
-            elif(line[0:2] =="sw" and not('sw_' in line)):
 
                 line= line.replace("sw","")
                 line= line.replace("(",",")
@@ -539,14 +556,16 @@ def simulate(Instructions, f, debugMode):
                 f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: None\n')
-                if (debugMode == 1 and loop == 1):
+
+            elif(line[0:3] =="sub"):
+                
+                if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
                     DIC += 1
                     not_Done = True
 
-            elif(line[0:3] =="sub"):
                 line = line.replace("sub","")
                 line = line.split(",")
                 if(debugMode != 1):
@@ -558,6 +577,9 @@ def simulate(Instructions, f, debugMode):
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+            elif(line[0:3] == "sll"): 
+                
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
@@ -565,7 +587,6 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                     not_Done = True
 
-            elif(line[0:3] == "sll"): 
                 line = line.replace("sll","")
                 line = line.split(",")
                 if(debugMode != 1):
@@ -578,12 +599,6 @@ def simulate(Instructions, f, debugMode):
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
-                if(debugMode == 1 and loop == 1):
-                    if not_Done:
-                        not_Done = cycle_tracker(instr_cycles, DIC)
-                        continue
-                    DIC += 1
-                    not_Done = True
 
 
             lineCount += 1
