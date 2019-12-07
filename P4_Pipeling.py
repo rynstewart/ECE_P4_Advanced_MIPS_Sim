@@ -738,24 +738,48 @@ def readIn(s):
 
 def main():
 
-    choice_Name = input("Please type 1 for Processor Simulation of MC, 2 for Processor Simulation of PC and 3 for CacheSim, or q for quit" + '\n')
-
-    if (choice_Name == "1"):
-        print("You have chosen Processor Simulation of MC" + '\n')
-
-    elif(choice_Name == "2"):
-        print("You have chosen Processor Simulation of PC" + '\n')
-
-    elif(choice_Name == "3"):
-        print("You have chosen CacheSim")
+######################################### UI WORK ###################################
     
     while(True):
-        file_Name = input("Please type input file name or enter for default (proj_A.asm), or q to quit:\n")
+        choice_Name = input("Please select one of the following or q to quit:\n" +\
+            "\t1 for Processor Simulation of MC\n" + 
+            "\t2 for Processor Simulation of PC\n" + \
+            "\t3 for CacheSim\n")
+
+        if (choice_Name == "1"):
+            print("You have chosen Processor Simulation of MC" + '\n')
+            break
+
+        elif(choice_Name == "2"):
+            print("You have chosen Processor Simulation of PC" + '\n')
+            break
+
+        elif(choice_Name == "3"):
+            print("You have chosen CacheSim")
+            break
+        
+        elif(choice_Name == "q"):
+            print("Bye!")
+            return
+        
+        print("Please input a valid selection.\n")
+    
+    choice_Name = int(choice_Name)
+        
+    
+    while(True):
+        file_Name = input("Please type input file name or enter for default (proj_A.asm or proj_B.asm), or q to quit:\n")
         if(file_Name == "q"):
             print("Bye!")
             return
+        
         if(file_Name == ""):
-            file_Name = "proj_A.asm"
+            if choice_Name != 3:
+                file_Name = "proj_A.asm"
+            else:
+                file_Name = "proj_B.asm"
+            print("File to be used is " + file_Name + "\n")
+
         try:
             f = open(file_Name)
             f.close()
@@ -792,12 +816,19 @@ def main():
             print("ERROR: Please type valid input\n")
             continue
 
+######################################### END UI WORK ##########################################
+
     h = open(file_Name,"r")
 
     asm = h.readlines()
     for item in range(asm.count('\n')): # Remove all empty lines '\n'
         asm.remove('\n')
-    simulate(asm, file_NameOut, select)
+    if choice_Name == 1:
+        simulate(asm, file_NameOut, select)
+    if choice_Name == 2:
+        print("IP\n")
+    if choice_Name == 3:
+        print("IP\n")
 
 
   
