@@ -125,12 +125,14 @@ def get_imm(instr, index):
 
 def cycle_tracker(instr_cycles, DIC):
     
-    index = DIC      
+    index = DIC  
+    print('\n************************ CYCLE INFORMATION ************************\n')    
     if "Fetch" in instr_cycles[index]:
         print("\n"+instr_cycles[index][0] +" in Fetch Cycle")
         instr_cycles[index].remove("Fetch")
+        return True
 
-    elif "Decode" in instr_cycles[index]:
+    if "Decode" in instr_cycles[index]:
         print("\n" + instr_cycles[index][0] + " in Decode Cycle")
         instr_cycles[index].remove("Decode")
         try:
@@ -138,17 +140,90 @@ def cycle_tracker(instr_cycles, DIC):
                 print("\n"+instr_cycles[index+1][0] +" in Fetch Cycle")
                 instr_cycles[index+1].remove("Fetch")
         except:
-            return
+            return False
+        
+        return True
     
-    elif "Execute" in instr_cycles[index]:
-        print("\n" + instr_cycles[index][0] + " in Decode Cycle")
+    if "Execute" in instr_cycles[index]:
+        print("\n" + instr_cycles[index][0] + " in Execute Cycle")
         instr_cycles[index].remove("Execute")
+        
         try:
-            if "Fetch" in instr_cycles[index+1]:
-                print("\n"+instr_cycles[index+1][0] +" in Fetch Cycle")
-                instr_cycles[index+1].remove("Fetch")
+            if "Decode" in instr_cycles[index+1]:
+                print("\n"+instr_cycles[index+1][0] +" in Decode Cycle")
+                instr_cycles[index+1].remove("Decode")
         except:
-            return
+            return False
+        
+        try:
+            if "Fetch" in instr_cycles[index+2]:
+                print("\n"+instr_cycles[index+2][0] +" in Fetch Cycle")
+                instr_cycles[index+2].remove("Fetch")
+        except:
+            return False
+        
+        return True
+
+    if "Memory" in instr_cycles[index]:
+        print("\n" + instr_cycles[index][0] + " in Memory Cycle")
+        instr_cycles[index].remove("Memory")
+        
+        try:
+            if "Execute" in instr_cycles[index+1]:
+                print("\n"+instr_cycles[index+1][0] +" in Execute Cycle")
+                instr_cycles[index+1].remove("Execute")
+        except:
+            return False
+        
+        try:
+            if "Decode" in instr_cycles[index+2]:
+                print("\n"+instr_cycles[index+2][0] +" in Decode Cycle")
+                instr_cycles[index+2].remove("Decode")
+        except:
+            return False
+        
+        try:
+            if "Fetch" in instr_cycles[index+3]:
+                print("\n"+instr_cycles[index+3][0] +" in Fetch Cycle")
+                instr_cycles[index+3].remove("Fetch")
+        except:
+            return False
+        
+        return True
+    
+    if "Write Back" in instr_cycles[index]:
+        print("\n" + instr_cycles[index][0] + " in Write Back Cycle")
+        instr_cycles[index].remove("Write Back")
+        
+        try:
+            if "Memory" in instr_cycles[index+1]:
+                print("\n"+instr_cycles[index+1][0] +" in Memory Cycle")
+                instr_cycles[index+1].remove("Memory")
+        except:
+            return False
+
+        try:
+            if "Execute" in instr_cycles[index+2]:
+                print("\n"+instr_cycles[index+2][0] +" in Execute Cycle")
+                instr_cycles[index+2].remove("Execute")
+        except:
+            return False
+        
+        try:
+            if "Decode" in instr_cycles[index+3]:
+                print("\n"+instr_cycles[index+3][0] +" in Decode Cycle")
+                instr_cycles[index+3].remove("Decode")
+        except:
+            return False
+        
+        try:
+            if "Fetch" in instr_cycles[index+4]:
+                print("\n"+instr_cycles[index+4][0] +" in Fetch Cycle")
+                instr_cycles[index+4].remove("Fetch")
+        except:
+            return False
+
+    return False
 
 
 
@@ -167,14 +242,15 @@ def simulate(Instructions, f, debugMode):
     instr_cycles = []
     
     f = open(f,"w+")
-
+    
     for loop in range(2):
         DIC = 0
         PC = 0
         MEM = [0]*12288 #intialize array to all 0s for 0x3000 indices
         regval = [0]*26 #0-23 and lo, hi
         lineCount = 0
-        i = 0   
+        i = 0  
+        not_Done = True
         while lineCount < len(Instructions):
             
             line = Instructions[lineCount]
@@ -183,13 +259,13 @@ def simulate(Instructions, f, debugMode):
 
             if(debugMode == 1 and loop == 1):
                 while(True):
-                    user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+                    user_pause = input("Press enter to continue or q to quit diagnosis mode:\n\n")
                     if(user_pause == ""):
                         print('MIPS Instruction: ' + line + '\n')
                         break
                     
                     if(user_pause == "q"):
-                        print("Continuing in non-stop mode")
+                        print("Continuing in non-stop mode\n")
                         debugMode = 2
                         break
 
@@ -219,8 +295,11 @@ def simulate(Instructions, f, debugMode):
                     instr_cycles.append(["addi", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
                     stats.log("addi", 4, PC)
                 if(debugMode == 1 and loop == 1):
-                    cycle_tracker(instr_cycles, DIC)
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
+                        continue
                     DIC += 1
+                    not_Done = True
 
 
             elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
@@ -241,56 +320,11 @@ def simulate(Instructions, f, debugMode):
                 PC += 4
 
                 if(debugMode == 1 and loop == 1):
-
-                    if(i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n' )
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n' )
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 3):
-                        print("Cycle 4: Memory" + '\n' )
-                        print("MemtoReg is now 0")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now 1")
-                        print("RegWrite is now 1")
-                        i = 0
-                        DIC += 1  
-                        stats.log("xor", 4, PC)
+                    DIC += 1
+                    not_Done = True
 
 
             #addu
@@ -308,56 +342,11 @@ def simulate(Instructions, f, debugMode):
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
                 if(debugMode == 1 and loop == 1):
-
-                    if(i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n' )
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n' )
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 3):
-                        print("Cycle 4: Memory" + '\n' )
-                        print("MemtoReg is now 0")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now 1")
-                        print("RegWrite is now 1")
-                        i = 0
-                        DIC += 1
-                        stats.log("addu", 4, PC)
+                    DIC += 1
+                    not_Done = True
 
             elif(line[0:4] == "sltu"):
                 line = line.replace("sltu","")
@@ -378,56 +367,11 @@ def simulate(Instructions, f, debugMode):
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
                 if(debugMode == 1 and loop == 1):
-
-                    if(i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n' )
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n' )
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 3):
-                        print("Cycle 4: Memory" + '\n' )
-                        print("MemtoReg is now 0")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now 1")
-                        print("RegWrite is now 1")
-                        i = 0
-                        DIC += 1
-                        stats.log("sltu", 4, PC)
+                    DIC += 1
+                    not_Done = True
 
 
             elif(line[0:3] == "slt"):
@@ -437,7 +381,6 @@ def simulate(Instructions, f, debugMode):
                     regval[int(line[0])] = 1
                 else:
                     regval[int(line[0])] = 0
-
                 PC = PC + 4
                 if(debugMode != 1):
                     DIC += 1
@@ -449,56 +392,11 @@ def simulate(Instructions, f, debugMode):
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
                 if(debugMode == 1 and loop == 1):
-                   
-                    if(i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n' )
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n' )
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 3):
-                        print("Cycle 4: Memory" + '\n' )
-                        print("MemtoReg is now 0")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now 1")
-                        print("RegWrite is now 1")
-                        i = 0
-                        DIC += 1
-                        stats.log("slt", 4, PC)
+                    DIC += 1
+                    not_Done = True
 
             elif(line[0:3] == "ori"):
                 line = line.replace("ori", "")
@@ -515,9 +413,12 @@ def simulate(Instructions, f, debugMode):
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + '=' + line[2] + '\n')
                 if(debugMode == 1 and loop == 1):
-                    for j in range(2):
-                        cycle_tracker(instr_cycles, DIC)
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
+                        continue
                     DIC += 1
+                    not_Done = True
+
             #bne
             elif(line[0:3] == "bne"): # BNE
                 line = line.replace("bne","")
@@ -529,49 +430,11 @@ def simulate(Instructions, f, debugMode):
                     stats.log("bne", 3, PC)
 
                 if (debugMode == 1 and loop == 1):
-
-                    if (i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 1")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i = 0
-                        DIC += 1
-                        stats.log("beq", 4, PC)
+                    DIC += 1
+                    not_Done = True
 
                 if(regval[int(line[0])]!=regval[int(line[1])]):
                     if(line[2].isdigit()): # First,test to see if it's a label or a integer
@@ -601,51 +464,15 @@ def simulate(Instructions, f, debugMode):
                     stats.log("beq", 3, PC)
 
                 if (debugMode == 1 and loop == 1):
-
-                    if (i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 1")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i = 0
-                        DIC += 1
-                        stats.log("beq", 4, PC)
+                    DIC += 1
+                    not_Done = True
 
                 if(regval[int(line[0])]==regval[int(line[1])]):
+                    if loop == 1:
+                        breakpoint()
                     if(line[2].isdigit()): # First,test to see if it's a label or a integer
                         PC = int(line[2])*4
                         lineCount = int(line[2])
@@ -689,79 +516,12 @@ def simulate(Instructions, f, debugMode):
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
                 if (debugMode == 1 and loop == 1):
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
+                        continue
+                    DIC += 1
+                    not_Done = True
                     
-                    if (i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 10")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 3):
-                        print("Cycle 4: Memory" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-                    elif (i == 4):
-                        print("Cycle 5: Write Back" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now 1")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now 0")
-                        print("RegWrite is now 1")
-                        i = 0
-                        DIC += 1
-                        stats.log("lw", 4, PC)
-
-                    
-
             elif(line[0:2] =="sw" and not('sw_' in line)):
 
                 line= line.replace("sw","")
@@ -780,64 +540,11 @@ def simulate(Instructions, f, debugMode):
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: None\n')
                 if (debugMode == 1 and loop == 1):
-                    
-                    if (i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 10")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 3):
-                        print("Cycle 4: Memory" + '\n')
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 1")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i = 0
-                        DIC += 1
-                        stats.log("sw", 4, PC)
-
+                    DIC += 1
+                    not_Done = True
 
             elif(line[0:3] =="sub"):
                 line = line.replace("sub","")
@@ -852,65 +559,11 @@ def simulate(Instructions, f, debugMode):
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
                 if(debugMode == 1 and loop == 1):
-
-                    if(i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        #PC = PC + 4
-                        #print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n' )
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n' )
-                        #PC = PC + 4
-                        #print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 3):
-                        print("Cycle 4: Memory" + '\n' )
-                        #PC = PC + 4
-                        #print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now 0")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now 1")
-                        print("RegWrite is now 1")
-                        i = 0
-                        DIC += 1
-                        stats.log("sub", 4, PC)
-
+                    DIC += 1
+                    not_Done = True
 
             elif(line[0:3] == "sll"): 
                 line = line.replace("sll","")
@@ -926,64 +579,11 @@ def simulate(Instructions, f, debugMode):
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
                 if(debugMode == 1 and loop == 1):
-
-                    if(i == 0):
-                        print("Cycle 1: Instruction Fetch" + '\n')
-                        #PC = PC + 4
-                        #print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 1")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
                         continue
-
-                    elif (i == 1):
-                        print("Cycle 2: Decode" + '\n' )
-                        # PC = PC + 4
-                        # print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 0")
-                        print("ALUSrcB is now 11")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-
-                    elif (i == 2):
-                        print("Cycle 3: Execute" + '\n' )
-                        #PC = PC + 4
-                        #print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now X")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now 1")
-                        print("ALUSrcB is now 0")
-                        print("RegDst is now X")
-                        print("RegWrite is now 0")
-                        i += 1
-                        continue
-
-                    elif (i == 3):
-                        print("Cycle 4: Memory" + '\n' )
-                        #PC = PC + 4
-                        #print('PC is now at ' + str(PC) + '\n')
-                        print("MemtoReg is now 0")
-                        print("MemWrite is now 0")
-                        print("Branch is now 0")
-                        print("ALUSrcA is now X")
-                        print("ALUSrcB is now X")
-                        print("RegDst is now 1")
-                        print("RegWrite is now 1")
-                        i = 0
-                        DIC += 1
-                        stats.log("sll", 4, PC)
+                    DIC += 1
+                    not_Done = True
 
 
             lineCount += 1
@@ -994,7 +594,6 @@ def simulate(Instructions, f, debugMode):
     final_print(regval,MEM, PC, DIC)    
     print("\n\n**************************************** FINAL CYCLE INFO ****************************************\n")
     print("IDEAL PIPLINE: ", tot_cycles)
-    stats.exitSim()
 
     f.close()
 
