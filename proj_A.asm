@@ -1,5 +1,5 @@
-# Prog A, parameter = 24
-# version slt
+# Prog A, parameter = 7
+# version sltu
 ori $8, $0, 7
 addi $9, $0, 0x40
 sw_loop:
