@@ -1,34 +1,32 @@
 import time
 
+def multi(MemtoReg, MemWrite, Branch, ALUSrcA, ALUSrcB, RegDst, RegWrite):
 
-##NEED: ori, addi, sw, beq, slt, addu, sub, xor, lw, slt, bne
-def twoComplement(string):
-    if(string[0] == '1'):
-        imm = 65535 - int(string, 2)
-        imm +=1
-        imm = -imm
-    else:
-        imm = int(string, 2)
-    return imm
+    print("MemtoReg is now " + MemtoReg)
+    print("MemWrite is now " + MemWrite)
+    print("Branch is now " + Branch)
+    print("ALUSrcA is now " + ALUSrcA)
+    print("ALUSrcB is now " + ALUSrcB)
+    print("RegDst is now " + RegDst)
+    print("RegWrite is now " + RegWrite + '\n')
 
 class Statistics:
     def __init__(self, debugMode):
-            self.I= ""               #current instruction being executed
-            self.name = ""           # name of the instruction
-            self.cycle = 0           # Total cycles in simulation
-            self.DIC = 0             # Total Dynamic Instr Count
-            self.threeCycles= 0      # How many instr that took 3 cycles to execute
-            self.fourCycles = 0      #                          4 cycles
-            self.fiveCycles = 0      #                          5 cycles
+        self.I= ""               #current instruction being executed
+        self.name = ""           # name of the instruction
+        self.cycle = 0           # Total cycles in simulation
+        self.DIC = 0             # Total Dynamic Instr Count
+        self.threeCycles= 0      # How many instr that took 3 cycles to execute
+        self.fourCycles = 0      #                          4 cycles
+        self.fiveCycles = 0      #                          5 cycles
         #self.DataHazard = 0      #number of data hazards
         #self.ControlHazard = 0   #number of control hazards
         #self.NOPcount = 0        #keeps track of NOP
         #self.flushCount = 0      #keeps track of flush
         #self.stallCount = 0      #keeps track of stall count
-            self.debugMode = debugMode
+        self.debugMode = debugMode
     
-    def log(self,I,name,cycle,pc):
-        self.I = I
+    def log(self,name,cycle,pc):
         self.name = name
         self.pc = pc
         self.cycle +=  cycle
@@ -37,9 +35,10 @@ class Statistics:
         self.fourCycles += 1 if (cycle == 4) else 0
         self.fiveCycles += 1 if (cycle == 5) else 0
 
+        ''' 
     def prints(self):
         #modify to work with asm instructions (not binary MC)
-        '''
+        
         imm = int(self.I[16:32],2) if self.I[16]=='0' else -(65535 -int(self.I[16:32],2)+1)
         if(self.debugMode):
             print("\n")
@@ -57,7 +56,7 @@ class Statistics:
             else:
                 print("")
             '''
-     def exitSim(self):
+    def exitSim(self):
         print("***Finished simulation***")
         print("Total # of cycles: " + str(self.cycle))
         print("Dynamic instructions count: " +str(self.DIC) + ". Break down:")
@@ -65,7 +64,7 @@ class Statistics:
         print("                    " + str(self.fourCycles) + " instructions take 4 cycles" )
         print("                    " + str(self.fiveCycles) + " instructions take 5 cycles" )
 
-    def saveJumpLabel(asm, labelIndex, labelName, labelAddr):
+def saveJumpLabel(asm, labelIndex, labelName, labelAddr):
     lineCount = 0
     for line in asm:
         line = line.replace(" ","")
@@ -78,7 +77,7 @@ class Statistics:
     for item in range(asm.count('\n')): # Remove all empty lines '\n'
         asm.remove('\n')
 
-    def regNameInit(regName):
+def regNameInit(regName):
     i = 0
     while i<=23:
         regName.append(str(i))
@@ -86,10 +85,11 @@ class Statistics:
     regName.append('lo')
     regName.append('hi')
 
-    def final_print(regval, PC, DIC)
-    ("REGISTERS:")
+def final_print(regval, MEM, PC, DIC):
+    print("REGISTERS:")
     print("-----------")
     for x in range(len(regval)):
+
         if(x == 24):
             print("lo: ", hex(regval[x]))
         elif(x == 25):
@@ -99,184 +99,738 @@ class Statistics:
     print("PC: ", hex(PC))
     print("DIC: ", hex(DIC))
 
-    print("\n")
-    print("Used Memory values:\n")
-    print("            ", end="")
+    print("\n*************************************** Used Memory values ***************************************\n")
+    print("offset:     ", end="")
     for x in range(0,8,1):
         print("0x"+ format((x*4),"08x"), end=" ")
     print("\n")
     print("--------------------------------------------------------------------------------------------------",end="")
     count = 0
     print("\n")
-    for x in range(0x2003,0x2100,4):
-        if((x-0x3)%0x20==0):
-            print("0x"+format(x-0x3,"08x") + '|', end=" ")
-        print("0x", end="")
-        for y in range(0,4,1):
-            print(format(MEM[x-y], "02x"), end="")
-        print(" ", end = "")
-        count += 1
-        if(count == 8):
+    y=0
+    for x in range(0x2000,0x2041,1):
+        if((x-0x2000) % 0x20 ==0):
+            print("0x" +format(0x2000+ y,"08x") + '|', end=" ")
+            y += 0x20
+
+        if count == 8:
             count = 0
-            print("\n")
+            print(" ", end = "\n")
+        if((x-0x2000)%4==0):  
+            print('0x'+format(MEM[x], "08x"), end=" ")
+            count += 1 
 
-    def simulate(Instructions, f, debugMode):
-        MEM = [0]*12288 #intialize array to all 0s for 0x3000 indices
-        labelIndex = []
-        labelName = []
-        labelAddr = []
-        regName = []
-        PC = 0
-        regNameInit(regName)
-        regval = [0]*26 #0-23 and lo, hi
-        LO = 24
-        HI = 25
+        
+def get_imm(instr, index):
 
-        finished = False
-        while(not(finished)):
-            fetch = Instructions[PC]
-            
-            f.write('------------------------------ \n')
-            if(not(':' in line)):
-                f.write('MIPS Instruction: ' + line + '\n')
-            line = line.replace("\n","") # Removes extra chars
-            line = line.replace("$","")
-            line = line.replace(" ","")
-            line = line.replace("zero","0") # assembly can also use both $zero and $0
+    #first check base
+    if '0x' in instr[index]:
+        imm = int(instr[index][2:],16)
+    else:
+        imm = int(instr[index])
 
-            if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
-                #f.write(line)
-                line = line.replace("addi","")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[0])] = regval[int(line[1])] + int(line[2])
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+    return imm
 
-            elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
-                line = line.replace("xor","")
-                line = line.split(",")
-                PC = PC + 4
-                #x = format(int(line[1]),'032b')^format(int(line[2]),'032b')
-                x = regval[int(line[1])]
-                y = regval[int(line[2])]
-                z = int(x)^int(y)
-                regval[int(line[0])] = z
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' ^ $' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+def simulate(Instructions, f, debugMode):
+    MEM = [0]*12288 #intialize array to all 0s for 0x3000 indices
+    labelIndex = []
+    labelName = []
+    labelAddr = []
+    regName = []
+    PC = 0
+    DIC = 0
+    regNameInit(regName)
+    regval = [0]*26 #0-23 and lo, hi
+    LO = 24
+    HI = 25
+    stats = Statistics(debugMode)
 
-            #addu
-            elif(line[0:4] == "addu"): 
-                line = line.replace("addu","")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[0])] = abs(regval[int(line[1])]) + abs(regval[int(line[2])])
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
-                       
-            #slt
-            elif(line[0:3] == "slt"):
-                line = line.replace("slt","")
-                line = line.split(",")
-                if(regval[int(line[1])] < regval[int(line[2])]):
-                    regval[int(line[0])] = 1
+    saveJumpLabel(Instructions,labelIndex,labelName, labelAddr)
+
+
+    f = open(f,"w+")
+    lineCount = 0
+    i = 0
+
+
+    while lineCount < len(Instructions):
+        
+        line = Instructions[lineCount]
+
+        #if "$8" in line:
+            #breakpoint()
+
+        if(debugMode == 1):
+            while(True):
+                user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+                if(user_pause == ""):
+                    print('MIPS Instruction: ' + line + '\n')
+                    break
+		        
+                if(user_pause == "q"):
+                    print("Continuing in non-stop mode")
+                    debugMode = 2
+                    break
+
                 else:
-                    regval[int(line[0])] = 0
+                    continue
+        f.write('------------------------------ \n')
+        if(not(':' in line)):
+            f.write('MIPS Instruction: ' + line + '\n')
+        line = line.replace("\n","") # Removes extra chars
+        line = line.replace("$","")
+        line = line.replace(" ","")
+        line = line.replace("zero","0") # assembly can also use both $zero and $0
+        
 
-                PC = PC + 4
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n') 
-
-            elif(line[0:3] == "ori"):
-                line = line.replace("ori", "")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[1])] = int(line[2],16) | regval[int(line[0])]
-                temp_val = format( int(regval[int(line[1])]),'032b')
-
-                f.write('Operation: $' + line[1] + '= $' + line[0] + "|"  + line[2])
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + str( int(line[2],16) ) + '=' + str(regval[int(line[0])]) + '\n')
+        if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
             
-            #bne
-            elif(line[0:3] == "bne"): # BNE
-                line = line.replace("bne","")
-                line = line.split(",")
-                if(regval[int(line[0])]!=regval[int(line[1])]):
-                    if(line[2].isdigit()): # First,test to see if it's a label or a integer
-                        PC = line[2]
-                        lineCount = line[2]
-                        f.write('PC is now at ' + str(line[2]) + '\n')
-                    else: # Jumping to label
-                        for i in range(len(labelName)):
-                            if(labelName[i] == line[2]):
-                                PC = labelAddr[i]
-                                lineCount = labelIndex[i]
-                                f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
+            if(debugMode == 1):
+
+                if(i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n' )
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n' )
+                    multi("X", "0", "0", "1", "10", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n' )
+                    multi("0", "0", "0", "X", "X", "0", "1")
+                    i = 0
+                    stats.log("addi", 4, PC)
+
+            line = line.replace("addi","")
+            line = line.split(",")
+            imm = get_imm(line,2)
+            regval[int(line[0])] = (regval[int(line[1])] + imm)  & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + line[2] + '; ' + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+            DIC += 1
+            PC += 4
+            if debugMode != 1:
+                stats.log("addi", 4, PC)
+
+
+        elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
+            
+            if(debugMode == 1):
+
+                if(i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n' )
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n' )
+                    multi("X", "0", "0", "1", "0", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n' )
+                    multi("0", "0", "0", "X", "X", "1", "1")
+                    i = 0
+                    stats.log("xor", 4, PC)
+
+            line = line.replace("xor","")
+            line = line.split(",")
+            x = regval[int(line[1])]
+            y = regval[int(line[2])]
+            z = int(x)^int(y)
+            regval[int(line[0])] = z & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' ^ $' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+            DIC += 1
+
+            PC += 4
+            if debugMode != 1:
+                stats.log("xor", 4, PC)
+
+
+        #addu
+        elif(line[0:4] == "addu"): 
+
+            if(debugMode == 1):
+
+                if(i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n' )
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n' )
+                    multi("X", "0", "0", "1", "0", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n' )
+                    multi("0", "0", "0", "X", "X", "1", "1")
+                    i = 0
+                    stats.log("addu", 4, PC)
+
+            line = line.replace("addu","")
+            line = line.split(",")
+            PC = PC + 4
+            DIC += 1
+            if debugMode != 1:
+                stats.log("addu", 4, PC)
+
+            regval[int(line[0])] = (abs(regval[int(line[1])]) + abs(regval[int(line[2])])) & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+        elif(line[0:4] == "sltu"):
+
+            if(debugMode == 1):
+
+                if(i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n' )
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n' )
+                    multi("X", "0", "0", "1", "0", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n' )
+                    multi("0", "0", "0", "X", "X", "1", "1")
+                    i = 0
+                    stats.log("sltu", 4, PC)
+
+            line = line.replace("sltu","")
+            line = line.split(",")
+            if(abs(regval[int(line[1])]) < abs(regval[int(line[2])])):
+                regval[int(line[0])] = 1
+            else:
+                regval[int(line[0])] = 0
+
+            PC = PC + 4
+            DIC += 1
+            if debugMode != 1:
+                stats.log("sltu", 4, PC)
+
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
+
+
+        elif(line[0:3] == "slt"):
+
+            if(debugMode == 1):
+
+                if(i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n' )
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n' )
+                    multi("X", "0", "0", "1", "0", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n' )
+                    multi("0", "0", "0", "X", "X", "1", "1")
+                    i = 0
+                    stats.log("slt", 4, PC)
+
+            line = line.replace("slt","")
+            line = line.split(",")
+            if(regval[int(line[1])] < regval[int(line[2])]):
+                regval[int(line[0])] = 1
+            else:
+                regval[int(line[0])] = 0
+
+            PC = PC + 4
+            DIC += 1
+            if debugMode != 1:
+                stats.log("slt", 4, PC)
+
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
+
+        elif(line[0:3] == "ori"):
+           
+            if(debugMode == 1):
+                if (i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n')
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n')
+                    multi("X", "0", "0", "1", "10", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n')
+                    multi("0", "0", "0", "X", "X", "0", "1")
+                    i = 0
+                    stats.log("ori", 4, PC)
+
+            line = line.replace("ori", "")
+            line = line.split(",")
+            imm = get_imm(line,2)
+            PC = PC + 4
+            DIC += 1
+            if debugMode != 1:
+                stats.log("ori", 4, PC)
+            regval[int(line[0])] = (imm | regval[int(line[1])]) & 0xFFFFFFFF
+
+            f.write('Operation: $' + line[0] + '= $' + line[1] + " | "  + line[2] + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + '=' + line[2] + '\n')
+
+        #bne
+        elif(line[0:3] == "bne"): # BNE
+            line = line.replace("bne","")
+            line = line.split(",")
+
+            if (debugMode == 1):
+                if (i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n')
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n')
+                    multi("X", "0", "1", "1", "0", "X", "0")
+                    i = 0
+                    stats.log("bne", 3, PC)
+            DIC += 1
+
+            if(regval[int(line[0])]!=regval[int(line[1])]):
+                if(line[2].isdigit()): # First,test to see if it's a label or a integer
+                    PC = int(line[2])*4
+                    lineCount = int(line[2])
+                    if debugMode != 1:
+                        stats.log("bne", 3, PC)
+                    f.write('PC is now at ' + str(line[2]) + '\n')
+                else: # Jumping to label
+                    for i in range(len(labelName)):
+                        if(labelName[i] == line[2]):
+                            PC = labelAddr[i]
+                            if debugMode != 1:
+                                stats.log("bne", 3, PC)
+                            lineCount = labelIndex[i]
+                            f.write('PC is now at ' + str(labelAddr[i]) + '\n')   
+                            break    
+                f.write('No Registers have changed. \n')
+                continue
+            f.write('No Registers have changed. \n')
+
+
+        #beq
+        elif(line[0:3] == "beq"): # Beq
+            line = line.replace("beq","")
+            line = line.split(",")
+
+            if (debugMode == 1):
+                if (i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n')
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n')
+                    multi("X", "0", "1", "1", "0", "X", "0")
+                    i = 0
+                    stats.log("beq", 3, PC)
+            
+            DIC += 1
+
+            if(regval[int(line[0])]==regval[int(line[1])]):
+                if(line[2].isdigit()): # First,test to see if it's a label or a integer
+                    PC = int(line[2])*4
+                    lineCount = int(line[2])
+                    if debugMode != 1:
+                        stats.log("beq", 3, PC)
+                    f.write('PC is now at ' + str(line[2]) + '\n')
+                    f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                     f.write('No Registers have changed. \n')
                     continue
+                else: # Jumping to label
+                    for i in range(len(labelName)):
+                        if(labelName[i] == line[2]):
+                            PC = labelAddr[i]
+                            if debugMode != 1:
+                                stats.log("beq", 3, PC)
+                            lineCount = labelIndex[i]
+                            f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                 f.write('No Registers have changed. \n')
-            
 
-            #beq
-            elif(line[0:3] == "beq"): # Beq
-                line = line.replace("beq","")
-                line = line.split(",")
-                if(regval[int(line[0])]==regval[int(line[1])]):
-                    if(line[2].isdigit()): # First,test to see if it's a label or a integer
-                        PC = line[2]
-                        lineCount = line[2]
-                        f.write('PC is now at ' + str(line[2]) + '\n')
-                    else: # Jumping to label
-                        for i in range(len(labelName)):
-                            if(labelName[i] == line[2]):
-                                PC = labelAddr[i]
-                                lineCount = labelIndex[i]
-                                f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
-                    f.write('No Registers have changed. \n')
+                continue
+
+
+        elif(line[0:2] =="lw" and not('lw_loop' in line)):
+
+            if (debugMode == 1):
+                if (i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
                     continue
-                f.write('No Registers have changed. \n')
 
-            elif(line[0:2] == "lw"):
-                line= line.replace("lw","")
-                line= line.replace("(",",")
-                line= line.replace(")","")
-                line= line.split(",")
-                PC = PC + 4
-                regval[int(line[0])]= MEM[ int(line[1]) + regval[int(line[2])] ]
-                f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n')
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
 
-            elif(line[0:2] == "sw"):
-                line= line.replace("sw","")
-                line= line.replace("(",",")
-                line= line.replace(")","")
-                line= line.split(",")
-                PC = PC + 4
-                MEM[ int(line[1]) + regval[int(line[2])] ] = regval[int(line[0])]
-                f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: None)
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n')
+                    multi("X", "0", "0", "1", "10", "X", "0")
+                    i += 1
+                    continue
 
-            elif(line[0:3] =="sub"):
-                line = line.replace("sub","")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[0])] = regval[int(line[1])] - regval[int(line[2])]
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n')
+                    multi("X", "0", "0", "X", "X", "X", "0")
+                    i += 1
+                    continue
+                elif (i == 4):
+                    print("Cycle 5: Write Back" + '\n')
+                    multi("1", "0", "0", "X", "X", "0", "1")
+                    i = 0
+                    stats.log("lw", 5, PC)
 
-            elif(line[0:3] == "sll"): 
-                line = line.replace("sll","")
-                line = line.split(",")
-                PC = PC + 4
-                regval[int(line[0])] = regval[int(line[1])] << int(line[2])
-                f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
-                f.write('PC is now at ' + str(PC) + '\n')
-                f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')  
+            line= line.replace("lw","")
+            line= line.replace("(",",")
+            line= line.replace(")","")
+            line= line.split(",")
+            PC = PC + 4
+            DIC += 1
+            imm = get_imm(line, 1)
+            if debugMode != 1:
+                stats.log("lw", 5, PC)
+            MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
+            bin_str = format(MEM_val, '32b')
+            if bin_str[0] == '1':
+                MEM_val = MEM_val ^ 0xffffffff
+                MEM_val +=1
+                MEM_val = -MEM_val
+
+            regval[int(line[0])]= MEM_val
+            f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+                
+
+        elif(line[0:2] =="sw" and not('sw_' in line)):
+
+            if (debugMode == 1):
+                if (i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n')
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n')
+                    multi("X", "0", "0", "1", "10", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n')
+                    multi("X", "1", "0", "X", "X", "X", "0")
+                    i = 0
+                    stats.log("sw", 4, PC)
+
+            line= line.replace("sw","")
+            line= line.replace("(",",")
+            line= line.replace(")","")
+            line= line.split(",")
+            PC = PC + 4
+            DIC += 1
+            imm = get_imm(line, 1)
+            if debugMode != 1:
+                stats.log("sw", 4, PC)
+            MEM_val = regval[int(line[0])] 
+            MEM[ regval[int(line[2])] + imm ] = MEM_val
+            f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: None\n')
+
+
+        elif(line[0:3] =="sub"):
+
+            if(debugMode == 1):
+                if(i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n' )
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n' )
+                    multi("X", "0", "0", "1", "0", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n' )
+                    multi("0", "0", "0", "X", "X", "1", "1")
+                    i = 0
+                    stats.log("sub", 4, PC)
+
+            line = line.replace("sub","")
+            line = line.split(",")
+            PC = PC + 4
+            DIC += 1
+            if debugMode != 1:
+                stats.log("sub", 4, PC)
+            regval[int(line[0])] = (regval[int(line[1])] - regval[int(line[2])])  & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+
+        elif(line[0:3] == "sll"):
+
+            if(debugMode == 1):
+                if(i == 0):
+                    print("Cycle 1: Instruction Fetch" + '\n')
+                    multi("X", "0", "0", "0", "1", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 1):
+                    print("Cycle 2: Decode" + '\n' )
+                    multi("X", "0", "0", "0", "11", "X", "0")
+                    i += 1
+                    continue
+
+
+                elif (i == 2):
+                    print("Cycle 3: Execute" + '\n' )
+                    multi("X", "0", "0", "1", "0", "X", "0")
+                    i += 1
+                    continue
+
+                elif (i == 3):
+                    print("Cycle 4: Memory" + '\n' )
+                    multi("0", "0", "0", "X", "X", "1", "1")
+                    i = 0
+                    stats.log("sll", 4, PC) 
+
+            line = line.replace("sll","")
+            line = line.split(",")
+            PC = PC + 4
+            DIC += 1
+            imm = get_imm(line,2)
+            if debugMode != 1:
+                stats.log("sll", 4, PC)
+            regval[int(line[0])] = (regval[int(line[1])] << imm) & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+        lineCount += 1
+
+    PC = (len(Instructions)-len(labelName)) * 4 
+
+    final_print(regval,MEM, PC, DIC)    
+    print("\n\n**************************************** FINAL CYCLE INFO ****************************************\n")
+    stats.exitSim()
+
+    f.close()
+
+
+def splitText(text):
+    return text.split("\n")
+
+def readIn(s):
+    text = ""
+    with open(s, "r") as f:
+        for line in f:
+            if (line != "\n" and line[0]!='#'):
+                text += line
+
+    return text
+
+def main():
+
+######################################### UI WORK ###################################
+    
+    while(True):
+        choice_Name = input("Please select one of the following or q to quit:\n" +\
+            "\t1 for Processor Simulation of MC\n" + 
+            "\t2 for Processor Simulation of PC\n" + \
+            "\t3 for CacheSim\n")
+
+        if (choice_Name == "1"):
+            print("You have chosen Processor Simulation of MC" + '\n')
+            break
+
+        elif(choice_Name == "2"):
+            print("You have chosen Processor Simulation of PC" + '\n')
+            break
+
+        elif(choice_Name == "3"):
+            print("You have chosen CacheSim")
+            break
+        
+        elif(choice_Name == "q"):
+            print("Bye!")
+            return
+        
+        print("Please input a valid selection.\n")
+    
+    choice_Name = int(choice_Name)
+        
+    
+    while(True):
+        file_Name = input("Please type input file name or enter for default (proj_A.asm or proj_B.asm), or q to quit:\n")
+        if(file_Name == "q"):
+            print("Bye!")
+            return
+        
+        if(file_Name == ""):
+            if choice_Name != 3:
+                file_Name = "proj_A.asm"
+            else:
+                file_Name = "proj_B.asm"
+            print("File to be used is " + file_Name + "\n")
+
+        try:
+            f = open(file_Name)
+            f.close()
+            break
+        except FileNotFoundError:
+            print('File does not exist')
+
+    while(True):
+        file_NameOut = input("Please type output file name or enter for default (mc.txt), or q to quit:\n")
+        if(file_NameOut == "q"):
+            print("Bye!")
+            return
+        if(file_NameOut == ""):
+            file_NameOut = "mc.txt"
+            break
+
+    while(True):
+        user_select = input("select one of the below or q to quit:\n" + \
+            "\ta) Diagnosis mode\n" +\
+            "\tb) Non-stop mode\n")
+
+        if(user_select == "a"):
+            select = 1
+            break
+        
+        if(user_select == "b"):
+            select = 2
+            break
+
+        if(user_select == "q"):
+            return
+
+        else:
+            print("ERROR: Please type valid input\n")
+            continue
+
+######################################### END UI WORK ##########################################
+
+    h = open(file_Name,"r")
+
+    asm = h.readlines()
+    for item in range(asm.count('\n')): # Remove all empty lines '\n'
+        asm.remove('\n')
+    if choice_Name == 1:
+        simulate(asm, file_NameOut, select)
+    if choice_Name == 2:
+        print("IP\n")
+    if choice_Name == 3:
+        print("IP\n")
+
+
+  
+
+main()
