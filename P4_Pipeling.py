@@ -444,7 +444,6 @@ def simulate(Instructions, f, debugMode):
         elif(line[0:3] == "bne"): # BNE
             line = line.replace("bne","")
             line = line.split(",")
-            DIC += 1
 
             if (debugMode == 1):
                 if (i == 0):
@@ -464,6 +463,7 @@ def simulate(Instructions, f, debugMode):
                     multi("X", "0", "1", "1", "0", "X", "0")
                     i = 0
                     stats.log("bne", 3, PC)
+            DIC += 1
 
             if(regval[int(line[0])]!=regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
@@ -490,7 +490,6 @@ def simulate(Instructions, f, debugMode):
         elif(line[0:3] == "beq"): # Beq
             line = line.replace("beq","")
             line = line.split(",")
-            DIC += 1
 
             if (debugMode == 1):
                 if (i == 0):
@@ -510,7 +509,8 @@ def simulate(Instructions, f, debugMode):
                     multi("X", "0", "1", "1", "0", "X", "0")
                     i = 0
                     stats.log("beq", 3, PC)
-
+            
+            DIC += 1
 
             if(regval[int(line[0])]==regval[int(line[1])]):
                 if(line[2].isdigit()): # First,test to see if it's a label or a integer
