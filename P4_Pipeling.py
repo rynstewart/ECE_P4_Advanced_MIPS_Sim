@@ -737,6 +737,17 @@ def readIn(s):
     return text
 
 def main():
+
+    choice_Name = input("Please type 1 for Processor Simulation of MC, 2 for Processor Simulation of PC and 3 for CacheSim, or q for quit" + '\n')
+
+    if (choice_Name == "1"):
+        print("You have chosen Processor Simulation of MC" + '\n')
+
+    elif(choice_Name == "2"):
+        print("You have chosen Processor Simulation of PC" + '\n')
+
+    elif(choice_Name == "3"):
+        print("You have chosen CacheSim")
     
     while(True):
         file_Name = input("Please type input file name or enter for default (proj_A.asm), or q to quit:\n")
