@@ -573,10 +573,16 @@ def simulate(Instructions, f, debugMode):
             line= line.split(",")
             PC = PC + 4
             DIC += 1
-            imm = get_imm(line, 1)
+            try:
+                rs = regval[int(line[2])]
+                imm = get_imm(line, 1)                    
+            except:
+                rs = regval[int(line[1])]
+                imm = 0
+
+            MEM_val = MEM[ rs + imm ] & 0xFFFFFFFF
             if debugMode != 1:
                 stats.log("lw", 5, PC)
-            MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
             bin_str = format(MEM_val, '32b')
             if bin_str[0] == '1':
                 MEM_val = MEM_val ^ 0xffffffff

@@ -94,7 +94,6 @@ def final_print(regval, MEM, PC, DIC):
 
         
 def get_imm(instr, index):
-
     #first check base
     if '0x' in instr[index]:
         imm = int(instr[index][2:],16)
@@ -127,7 +126,9 @@ def cycle_tracker(instr_cycles, DIC):
     if "Execute" in instr_cycles[index][1]:
         print("\n" + instr_cycles[index][0] + " in Execute Cycle")
         if(instr_cycles[index][1][1] != ""):
-            print("\n\t" + instr_cycles[index][1][1])
+            print("\n\tForwarding Path(s):")
+            for k in range(1,len(instr_cycles[index][1]),1):
+                print("\n\t" + instr_cycles[index][1][k])
         del instr_cycles[index][1]
         
         try:
@@ -154,7 +155,8 @@ def cycle_tracker(instr_cycles, DIC):
             if "Execute" in instr_cycles[index+1][1]:
                 print("\n"+instr_cycles[index+1][0] +" in Execute Cycle")
                 if(instr_cycles[index+1][1][1] != ""):
-                    print("\n\t" + instr_cycles[index+1][1][1])
+                    for k in range(1,len(instr_cycles[index+1][1]),1):
+                        print("\n\t" + instr_cycles[index+1][1][k])
                 del instr_cycles[index+1][1]
         except:
             return False
@@ -178,7 +180,8 @@ def cycle_tracker(instr_cycles, DIC):
     if "Write Back" in instr_cycles[index][1]:
         print("\n" + instr_cycles[index][0] + " in Write Back Cycle")
         if(instr_cycles[index][1][1] != ""):
-            print("\n\t" + instr_cycles[index][1][1])
+            for k in range(1,len(instr_cycles[index][1]),1):
+                print("\n\t" + instr_cycles[index][1][k])
         instr_cycles[index][1]
         
         try:
@@ -192,7 +195,8 @@ def cycle_tracker(instr_cycles, DIC):
             if "Execute" in instr_cycles[index+2][1]:
                 print("\n"+instr_cycles[index+2][0] +" in Execute Cycle")
                 if(instr_cycles[index+2][1][1] != ""):
-                    print("\n\t" + instr_cycles[index+2][1][1])
+                    for k in range(1,len(instr_cycles[index+2][1]),1):
+                        print("\n\t" + instr_cycles[index+2][1][k])
                 del instr_cycles[index+2][1]
         except:
             return False
@@ -214,12 +218,19 @@ def cycle_tracker(instr_cycles, DIC):
     return False
 
 def hazards_handle(instr_cycles, asm, instr):
-    foward_path = "no forward needed"
+    
+    DIC = len(instr_cycles) - 1
     try:    
-        asm[instr-1]
+        instr_cycles[DIC-1]
     except:
         return
-    DIC = len(instr_cycles) - 1
+    i = 1
+    if ":" in asm[instr-i] or "#" in asm[instr-i]:
+        i = 2
+        if ":" in asm[instr-i] or "#" in asm[instr-i]:
+            i = 3
+    if instr - i < 0:
+        return
 
     current = asm[instr]   
     current = current.replace("\n","") # Removes extra chars
@@ -227,61 +238,94 @@ def hazards_handle(instr_cycles, asm, instr):
     current = current.replace(" ","")
     current_name = instr_cycles[DIC][0]
     current = current.replace(current_name,"")
+    current = current.replace("(",",")
+    current = current.replace(")","")
     current = current.split(",")
 
-    prev = asm[instr-1] 
+    prev = asm[instr-i] 
     prev = prev.replace("\n","") # Removes extra chars
     prev = prev.replace("$","")
     prev = prev.replace(" ","")
     prev_name = instr_cycles[DIC-1][0]
     prev = prev.replace(prev_name,"")
+    prev = prev.replace("(",",")
+    prev = prev.replace(")","")
     prev = prev.split(",")
+
 
     norm_instri = ["addi", "ori", "sll"]
     norm_instrr = ["xor", "addu", "sltu", "slt", "sub"]
     branch = ["beq", "bne"]
 
     if prev_name in norm_instrr or prev_name in norm_instri:
-        prd = int(prev[1])
+        prd = int(prev[0])
         if current_name in norm_instri:
             rs = int(current[1])
             if rs == prd:
                 instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcA"
                 return
-            if current_name in norm_instrr:
-                rt = int(current[2])
-                rs = int(current[1])
-                if rs == prd:
+
+        if current_name in norm_instrr:
+            rt = int(current[2])
+            rs = int(current[1])
+            if rs == prd:
+                if instr_cycles[DIC-1][3][1] == "":
+                    instr_cycles[DIC-1][3].append("ALUoutM --> ALUSrcA")
+                else:    
                     instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcA"
-                if rt == prd:
-                    instr_cycles[DIC-1][3][1].append("ALUoutM --> ALUSrcB")
-        
+            if rt == prd:
+                if instr_cycles[DIC-1][3][1] == "":
+                    instr_cycles[DIC-1][3].append("ALUoutM --> ALUSrcB")
+                else:    
+                    instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcB"
 
-    '''
-    elif current_name in norm_instrr:
-        current = current.replace(current_name,"")
-        current = current.split(",")
-        rs = regval[int(current[1])]
-        rt = regval[int(current[2])]
-    elif current_name in branch:
-        current = current.replace(current_name,"")
-        current = current.split(",")
-        rs = regval[int(current[1])]
-        rt = regval[int(current[2])]
-    elif current_name == "lw":
-        current = current.replace(current_name,"")
-        current = current.split(",")
-        rd = regval[int(current[0])]
-   
-    return forward_path
+    if prev_name in norm_instrr or prev_name in norm_instri:
+        prd = int(prev[0])
+        if current_name == "sw":
+            rt = int(current[2])
+            if rt == prd:
+                instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcB"
 
-    #NEED:
-    #whether any stage contains a bubble, due to stall or
-    #flush, used to solve which hazard, hazard information (which forwarding path is
-    #being activated: 
-    #cycle count, statistics of delays
-    #(caused by each category), statistics of forward-path usage. 
-    '''
+
+    if prev_name in norm_instrr or prev_name in norm_instri:
+        prd = int(prev[0])
+        if current_name in branch:
+            rt = int(current[1])
+            rs = int(current[0])
+            if rs == prd or rt == prd:
+                instr_cycles[DIC-1][3][1] = "ALUoutM --> EqualD"
+
+    if prev_name in norm_instrr or prev_name in norm_instri:
+        prd = int(prev[0])
+        if current_name == "lw":
+            rt = int(current[2])
+            if rt == prd:
+                instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcB"
+
+
+    if prev_name == "lw":
+        prd = int(prev[0])
+        if current_name in branch:
+            rt = int(current[2])
+            rs = int(current[1])
+            if rs == prd or rt == prd:
+                instr_cycles[DIC - 1][5][1] = "ResultW --> EqualD"
+
+    if prev_name in "lw":
+        prd = int(prev[0])
+        if current_name in norm_instrr or prev_name in norm_instri:
+            rt = int(current[2])
+            rs = int(current[1])
+            if rs == prd:
+                if instr_cycles[DIC-1][3][1] == "":
+                    instr_cycles[DIC-1][5].append("ResultW --> ALUSrcA")
+                else:    
+                    instr_cycles[DIC-1][5][1] = "ResultW --> ALUSrcA"
+            if rt == prd:
+                if instr_cycles[DIC-1][5][1] == "":
+                    instr_cycles[DIC-1][5].append("ResultW --> ALUSrcB")
+                else:    
+                    instr_cycles[DIC-1][5][1] = "ResultW --> ALUSrcB"
 
 
 def simulate(Instructions, f, debugMode):
@@ -316,18 +360,19 @@ def simulate(Instructions, f, debugMode):
 
             if(debugMode == 1 and loop == 1):
                 while(True):
-                    user_pause = input("Press enter to continue or q to quit diagnosis mode:\n\n")
-                    if(user_pause == ""):
-                        print('MIPS Instruction: ' + line + '\n')
-                        break
-                    
-                    if(user_pause == "q"):
-                        print("Continuing in non-stop mode\n")
-                        debugMode = 2
-                        break
+                    if not_Done:
+                        user_pause = input("Press enter to continue or q to quit diagnosis mode:\n\n")
+                        if(user_pause == ""):
+                            print('MIPS Instruction: ' + line + '\n')
+                            break
+                        if(user_pause == "q"):
+                            print("Continuing in non-stop mode\n")
+                            debugMode = 2
+                            break
+                        else:
+                            continue
+                    break
 
-                    else:
-                        continue
             f.write('------------------------------ \n')
             if(not(':' in line)):
                 f.write('MIPS Instruction: ' + line + '\n')
@@ -356,6 +401,7 @@ def simulate(Instructions, f, debugMode):
                 PC += 4
                 if(loop == 0):
                     instr_cycles.append(["addi", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("addi", 4, PC)
 
 
@@ -380,6 +426,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["xor", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("xor", 4, PC)
                 PC += 4
 
@@ -399,6 +446,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["addu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("addu", 4, PC)
 
                 regval[int(line[0])] = (abs(regval[int(line[1])]) + abs(regval[int(line[2])])) & 0xFFFFFFFF
@@ -427,6 +475,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sltu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("sltu", 4, PC) 
 
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
@@ -453,6 +502,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sltu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("slt", 4, PC)
 
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
@@ -475,6 +525,7 @@ def simulate(Instructions, f, debugMode):
                 regval[int(line[0])] = (imm | regval[int(line[1])]) & 0xFFFFFFFF
                 if(loop == 0):
                     instr_cycles.append(["ori", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("ori", 4, PC)
                 if(debugMode != 1):
                     DIC += 1
@@ -484,22 +535,22 @@ def simulate(Instructions, f, debugMode):
 
             #bne
             elif(line[0:3] == "bne"): # BNE
+                if (debugMode == 1 and loop == 1):
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
+                        continue
+                    DIC += 1
+                    not_Done = True
                 line = line.replace("bne","")
                 line = line.split(",")
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["bne", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("bne", 3, PC)
 
                 if(regval[int(line[0])]!=regval[int(line[1])]):
-                    
-                    if (debugMode == 1 and loop == 1):
-                        if not_Done:
-                            not_Done = cycle_tracker(instr_cycles, DIC)
-                            continue
-                        DIC += 1
-                        not_Done = True
 
                     if(line[2].isdigit()): # First,test to see if it's a label or a integer
                         PC = int(line[2])*4
@@ -519,22 +570,22 @@ def simulate(Instructions, f, debugMode):
 
             #beq
             elif(line[0:3] == "beq"): # Beq
+                if (debugMode == 1 and loop == 1):
+                    if not_Done:
+                        not_Done = cycle_tracker(instr_cycles, DIC)
+                        continue
+                    DIC += 1
+                    not_Done = True
                 line = line.replace("beq","")
                 line = line.split(",")
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["beq", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("beq", 3, PC)
 
                 if(regval[int(line[0])]==regval[int(line[1])]):
-                    
-                    if (debugMode == 1 and loop == 1):
-                        if not_Done:
-                            not_Done = cycle_tracker(instr_cycles, DIC)
-                            continue
-                        DIC += 1
-                        not_Done = True
 
                     if(line[2].isdigit()): # First,test to see if it's a label or a integer
                         PC = int(line[2])*4
@@ -575,9 +626,13 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["lw", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("lw", 5, PC)
-                imm = get_imm(line, 1)
-                MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
+
+                rs = regval[int(line[2])]
+                imm = get_imm(line, 1)                    
+
+                MEM_val = MEM[ rs + imm ] & 0xFFFFFFFF
                 bin_str = format(MEM_val, '32b')
                 if bin_str[0] == '1':
                     MEM_val = MEM_val ^ 0xffffffff
@@ -606,6 +661,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sw", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("sw", 4, PC)
                 imm = get_imm(line, 1)
                 MEM_val = regval[int(line[0])] 
@@ -629,6 +685,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sub", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("sub", 4, PC)
                 regval[int(line[0])] = (regval[int(line[1])] - regval[int(line[2])])  & 0xFFFFFFFF
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
@@ -651,7 +708,6 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sll", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    breakpoint()
                     hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("sll", 4, PC)
                 imm = get_imm(line,2)
