@@ -552,13 +552,22 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
 
     PC = (len(Instructions)-len(labelName)) * 4
 
+    printarray = [[0 for i in range(16)] for j in range(4)]
+
     print("\n\n**************************************** FINAL CACHE RESULTS ****************************************\n")
 
+
+    for i in range(16):
+        printarray[0][i]=cache[i]
+        printarray[1][i]=cache[i+16]
+        printarray[2][i]=cache[i+32]
+        printarray[3][i]=cache[i+48]
 
 
     print("Total hits: " + str(final_hits))
     print("Total misses: " + str(final_misses))
     print("Hit rate: " + str(final_hits/(final_misses+final_hits)))
+    print("\nFinal Cache content: \n"+ str(printarray[0])+"\n"+str(printarray[1])+"\n"+str(printarray[2])+"\n"+str(printarray[3]))
     print("\n\n")
 
     final_print(regval,MEM, PC, DIC)
