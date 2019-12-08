@@ -1,3 +1,4 @@
+
 import time
 
 class Statistics:
@@ -25,27 +26,6 @@ class Statistics:
         self.fourCycles += 1 if (cycle == 4) else 0
         self.fiveCycles += 1 if (cycle == 5) else 0
 
-        ''' 
-    def prints(self):
-        #modify to work with asm instructions (not binary MC)
-        
-        imm = int(self.I[16:32],2) if self.I[16]=='0' else -(65535 -int(self.I[16:32],2)+1)
-        if(self.debugMode):
-            print("\n")
-            print("Instruction: " + self.I)
-            if(self.name == "add"):
-                print("Cycle: " + str(self.cycle-4) + "|PC: " +str(self.pc*4) + " add $" + str(int(self.I[16:21],2)) + ",$" +str(int(self.I[6:11],2)) + ",$" + str(int(self.I[11:16],2)) + "   Taking 4 cycles")
-            elif(self.name == "addi"):
-                print("Cycle: " + str(self.cycle-4) + "|PC: " +str(self.pc*4) + " addi $" + str(int(self.I[16:21],2)) + ",$" +str(int(self.I[6:11],2)) + ","  + str(imm)  + "   Taking 4 cycles")
-            elif(self.name == "beq"):
-                print("Cycle: " + str(self.cycle-3) + "|PC: " +str(self.pc*4) + " beq $" + str(int(self.I[6:11],2)) + ",$" +str(int(self.I[11:16],2)) + ","  + str(imm)  + "   Taking 3 cycles")
-            elif(self.name == "slt"):
-                print("Cycle: " + str(self.cycle-4) + "|PC: " +str(self.pc*4) + " slt $" + str(int(self.I[16:21],2)) + ",$" +str(int(self.I[6:11],2)) + ",$" + str(int(self.I[11:16],2)) + "   Taking 4 cycles")
-            elif(self.name == "sw"):
-                print("Cycle: " + str(self.cycle-4) + "|PC :" +str(self.pc*4) + " sw $" + str(int(self.I[6:11],2)) + "," + str(int(self.I[16:32],2) - 8192) + "($" + str(int(self.I[6:11],2)) + ")" + "   Taking 4 cycles"  )
-            else:
-                print("")
-            '''
     def exitSim(self):
         print("***Finished simulation***")
         print("Total # of cycles: " + str(self.cycle))
@@ -127,104 +107,181 @@ def cycle_tracker(instr_cycles, DIC):
     
     index = DIC  
     print('\n************************ CYCLE INFORMATION ************************\n')    
-    if "Fetch" in instr_cycles[index]:
+    if "Fetch" in instr_cycles[index][1]:
         print("\n"+instr_cycles[index][0] +" in Fetch Cycle")
-        instr_cycles[index].remove("Fetch")
+        del instr_cycles[index][1] 
         return True
 
-    if "Decode" in instr_cycles[index]:
+    if "Decode" in instr_cycles[index][1]:
         print("\n" + instr_cycles[index][0] + " in Decode Cycle")
-        instr_cycles[index].remove("Decode")
+        del instr_cycles[index][1] 
         try:
-            if "Fetch" in instr_cycles[index+1]:
+            if "Fetch" in instr_cycles[index+1][1]:
                 print("\n"+instr_cycles[index+1][0] +" in Fetch Cycle")
-                instr_cycles[index+1].remove("Fetch")
+                del instr_cycles[index+1][1]
         except:
             return False
         
         return True
     
-    if "Execute" in instr_cycles[index]:
+    if "Execute" in instr_cycles[index][1]:
         print("\n" + instr_cycles[index][0] + " in Execute Cycle")
-        instr_cycles[index].remove("Execute")
+        if(instr_cycles[index][1][1] != ""):
+            print("\n\t" + instr_cycles[index][1][1])
+        del instr_cycles[index][1]
         
         try:
-            if "Decode" in instr_cycles[index+1]:
+            if "Decode" in instr_cycles[index+1][1]:
                 print("\n"+instr_cycles[index+1][0] +" in Decode Cycle")
-                instr_cycles[index+1].remove("Decode")
+                del instr_cycles[index+1][1]
         except:
             return False
         
         try:
-            if "Fetch" in instr_cycles[index+2]:
+            if "Fetch" in instr_cycles[index+2][1]:
                 print("\n"+instr_cycles[index+2][0] +" in Fetch Cycle")
-                instr_cycles[index+2].remove("Fetch")
+                del instr_cycles[index+2][1]
         except:
             return False
         
         return True
 
-    if "Memory" in instr_cycles[index]:
+    if "Memory" in instr_cycles[index][1]:
         print("\n" + instr_cycles[index][0] + " in Memory Cycle")
-        instr_cycles[index].remove("Memory")
+        del instr_cycles[index][1]
         
         try:
-            if "Execute" in instr_cycles[index+1]:
+            if "Execute" in instr_cycles[index+1][1]:
                 print("\n"+instr_cycles[index+1][0] +" in Execute Cycle")
-                instr_cycles[index+1].remove("Execute")
+                if(instr_cycles[index+1][1][1] != ""):
+                    print("\n\t" + instr_cycles[index+1][1][1])
+                del instr_cycles[index+1][1]
         except:
             return False
         
         try:
-            if "Decode" in instr_cycles[index+2]:
+            if "Decode" in instr_cycles[index+2][1]:
                 print("\n"+instr_cycles[index+2][0] +" in Decode Cycle")
-                instr_cycles[index+2].remove("Decode")
+                del instr_cycles[index+2][1]
         except:
             return False
         
         try:
-            if "Fetch" in instr_cycles[index+3]:
+            if "Fetch" in instr_cycles[index+3][1]:
                 print("\n"+instr_cycles[index+3][0] +" in Fetch Cycle")
-                instr_cycles[index+3].remove("Fetch")
+                del instr_cycles[index+3][1]
         except:
             return False
         
         return True
     
-    if "Write Back" in instr_cycles[index]:
+    if "Write Back" in instr_cycles[index][1]:
         print("\n" + instr_cycles[index][0] + " in Write Back Cycle")
-        instr_cycles[index].remove("Write Back")
+        if(instr_cycles[index][1][1] != ""):
+            print("\n\t" + instr_cycles[index][1][1])
+        instr_cycles[index][1]
         
         try:
-            if "Memory" in instr_cycles[index+1]:
+            if "Memory" in instr_cycles[index+1][1]:
                 print("\n"+instr_cycles[index+1][0] +" in Memory Cycle")
-                instr_cycles[index+1].remove("Memory")
+                del instr_cycles[index+1][1]
         except:
             return False
 
         try:
-            if "Execute" in instr_cycles[index+2]:
+            if "Execute" in instr_cycles[index+2][1]:
                 print("\n"+instr_cycles[index+2][0] +" in Execute Cycle")
-                instr_cycles[index+2].remove("Execute")
+                if(instr_cycles[index+2][1][1] != ""):
+                    print("\n\t" + instr_cycles[index+2][1][1])
+                del instr_cycles[index+2][1]
         except:
             return False
         
         try:
-            if "Decode" in instr_cycles[index+3]:
+            if "Decode" in instr_cycles[index+3][1]:
                 print("\n"+instr_cycles[index+3][0] +" in Decode Cycle")
-                instr_cycles[index+3].remove("Decode")
+                del instr_cycles[index+3][1]
         except:
             return False
         
         try:
-            if "Fetch" in instr_cycles[index+4]:
+            if "Fetch" in instr_cycles[index+4][1]:
                 print("\n"+instr_cycles[index+4][0] +" in Fetch Cycle")
-                instr_cycles[index+4].remove("Fetch")
+                del instr_cycles[index+4][1]
         except:
             return False
 
     return False
 
+def hazards_handle(instr_cycles, asm, instr):
+    foward_path = "no forward needed"
+    try:    
+        asm[instr-1]
+    except:
+        return
+    DIC = len(instr_cycles) - 1
+
+    current = asm[instr]   
+    current = current.replace("\n","") # Removes extra chars
+    current = current.replace("$","")
+    current = current.replace(" ","")
+    current_name = instr_cycles[DIC][0]
+    current = current.replace(current_name,"")
+    current = current.split(",")
+
+    prev = asm[instr-1] 
+    prev = prev.replace("\n","") # Removes extra chars
+    prev = prev.replace("$","")
+    prev = prev.replace(" ","")
+    prev_name = instr_cycles[DIC-1][0]
+    prev = prev.replace(prev_name,"")
+    prev = prev.split(",")
+
+    norm_instri = ["addi", "ori", "sll"]
+    norm_instrr = ["xor", "addu", "sltu", "slt", "sub"]
+    branch = ["beq", "bne"]
+
+    if prev_name in norm_instrr or prev_name in norm_instri:
+        prd = int(prev[1])
+        if current_name in norm_instri:
+            rs = int(current[1])
+            if rs == prd:
+                instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcA"
+                return
+            if current_name in norm_instrr:
+                rt = int(current[2])
+                rs = int(current[1])
+                if rs == prd:
+                    instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcA"
+                if rt == prd:
+                    instr_cycles[DIC-1][3][1].append("ALUoutM --> ALUSrcB")
+        
+
+    '''
+    elif current_name in norm_instrr:
+        current = current.replace(current_name,"")
+        current = current.split(",")
+        rs = regval[int(current[1])]
+        rt = regval[int(current[2])]
+    elif current_name in branch:
+        current = current.replace(current_name,"")
+        current = current.split(",")
+        rs = regval[int(current[1])]
+        rt = regval[int(current[2])]
+    elif current_name == "lw":
+        current = current.replace(current_name,"")
+        current = current.split(",")
+        rd = regval[int(current[0])]
+   
+    return forward_path
+
+    #NEED:
+    #whether any stage contains a bubble, due to stall or
+    #flush, used to solve which hazard, hazard information (which forwarding path is
+    #being activated: 
+    #cycle count, statistics of delays
+    #(caused by each category), statistics of forward-path usage. 
+    '''
 
 
 def simulate(Instructions, f, debugMode):
@@ -298,7 +355,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 PC += 4
                 if(loop == 0):
-                    instr_cycles.append(["addi", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["addi", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("addi", 4, PC)
 
 
@@ -322,7 +379,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["xor", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["xor", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("xor", 4, PC)
                 PC += 4
 
@@ -341,7 +398,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["addu", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["addu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("addu", 4, PC)
 
                 regval[int(line[0])] = (abs(regval[int(line[1])]) + abs(regval[int(line[2])])) & 0xFFFFFFFF
@@ -369,7 +426,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["sltu", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["sltu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("sltu", 4, PC) 
 
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
@@ -395,7 +452,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["slt", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["sltu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("slt", 4, PC)
 
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
@@ -417,7 +474,7 @@ def simulate(Instructions, f, debugMode):
                 PC = PC + 4
                 regval[int(line[0])] = (imm | regval[int(line[1])]) & 0xFFFFFFFF
                 if(loop == 0):
-                    instr_cycles.append(["ori", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["ori", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("ori", 4, PC)
                 if(debugMode != 1):
                     DIC += 1
@@ -432,7 +489,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["bne", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["bne", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("bne", 3, PC)
 
                 if(regval[int(line[0])]!=regval[int(line[1])]):
@@ -467,7 +524,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["beq", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["beq", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("beq", 3, PC)
 
                 if(regval[int(line[0])]==regval[int(line[1])]):
@@ -517,7 +574,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["lw", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["lw", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("lw", 5, PC)
                 imm = get_imm(line, 1)
                 MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
@@ -548,7 +605,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["sw", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["sw", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("sw", 4, PC)
                 imm = get_imm(line, 1)
                 MEM_val = regval[int(line[0])] 
@@ -571,7 +628,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["sub", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["sub", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
                     stats.log("sub", 4, PC)
                 regval[int(line[0])] = (regval[int(line[1])] - regval[int(line[2])])  & 0xFFFFFFFF
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
@@ -583,6 +640,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        #hazards_handle(instr_cycles, DIC, asm, instr, regval)
                         continue
                     DIC += 1
                     not_Done = True
@@ -592,7 +650,9 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode != 1):
                     DIC += 1
                 if(loop == 0):
-                    instr_cycles.append(["sll", "Fetch", "Decode", "Execute", "Memory", "Write Back"])
+                    instr_cycles.append(["sll", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    breakpoint()
+                    hazards_handle(instr_cycles, Instructions, lineCount)
                     stats.log("sll", 4, PC)
                 imm = get_imm(line,2)
                 regval[int(line[0])] = (regval[int(line[1])] << imm) & 0xFFFFFFFF
