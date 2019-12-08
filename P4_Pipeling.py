@@ -16,6 +16,8 @@ def get_least_recently_used(LRU): #this function find the value int LRU that was
 
 def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_tag,LRU):
 
+    print("*****Cache Simulator being accessed*****\n")
+
     if (user_input=='a'):
 
         address="{0:032b}".format(int(mem_addr, 16))                     #get mem addr
@@ -56,7 +58,6 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
 
     elif(user_input=='b'):
 
-        misses=0
         hitway=0
         hit_stat=0
         valid_way=0
@@ -82,14 +83,15 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
 
         if(hit_stat==1):                                #hit since the tags are matching
             print("Looking at set/block : "+str(hitway))
-            hits+=1
+            Hits+=1
             LRU = update_LRU(LRU, hitway)               #update LRU since we are using the way
             hit_stat=0                                  #reset
             valid_bit=1
             HorM= "Hit"
             cache_block=hitway
+            block_index= hitway
         else:
-            misses=+1
+            Misses+=1
             if (valid_bit==0):                          #if the way is empty
                 print("Looking at set/block : "+str(valid_way))
                 ways_tag[valid_way]= tag_bits           #update the tag of the way
@@ -109,7 +111,7 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
 
 
         for i in range(8):                                               #updating Cache
-            cache[(block_index*8)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+            cache[(block_index*8)+i]= MEM[(int(addr_from,16) +i)]      #will add mem[] to load from memory
 
         print("Way information: ")
         print("valid bit: " + str(valid_bit))
@@ -121,103 +123,86 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
 
     elif(user_input=='c'): #updating cache needs to be fixed
 
-         valid = [[0 for i in range(2)] for j in range(4)]
-         ways_tag = [[0 for i in range(2)] for j in range(4)]
-         LRU = [[-1 for i in range(2)] for j in range(4)]
-         Cache = [0 for i in range(64)]
-         hits = 0
-         misses = 0
          hit_stat = 0
          valid_way = 0
          valid_bit = 0
          hitway = 0
 
-         for i in range (len(mem_addr)):
+         address="{0:032b}".format(int(mem_addr, 16))
+         print("Memory address: "+ address)
+         tag_bits= address[0:27]
+         set_index= int(address[27:29],2)
+         addr_from = hex(int(address[0:32],2) & int("FFFFFFF8",16))  #first address to bring from memory
+         addr_to = hex(int(address[0:32],2) | int("7",16))           #last address to bring from memory
 
-             address="{0:032b}".format(int(mem_addr[i], 16))
-             print("Memory address: "+ address)
-             tag_bits= address[0:27]
-             set_index= int(address[27:29],2)
-             addr_from = hex(int(address[0:32],2) & int("FFFFFFF8",16))  #first address to bring from memory
-             addr_to = hex(int(address[0:32],2) | int("7",16))           #last address to bring from memory
+                                                        #in this case we will check four different lists for each sits
+         for i in range(2):                             #check to see if the tag already exist for one of the ways
+             if (ways_tag[set_index][i] == tag_bits):             #if the tag exists
+                 hitway=i                                #save the index of this way which indicates a hit
+                 hit_stat=1                              #change stat of hit to 1
+                 break
+         valid_bit = 1
+         for i in range(2):                              #check if any of the ways is empty
+             if (valid[set_index][i]==0):                           #if so save the index of this way
+                 valid_way=i
+                 valid_bit=0                             #valid bit of the way is zero
+                 break
 
-                                                            #in this case we will check four different lists for each sits
-             for i in range(2):                             #check to see if the tag already exist for one of the ways
-                 if (ways_tag[set_index][i] == tag_bits):             #if the tag exists
-                     hitway=i                                #save the index of this way which indicates a hit
-                     hit_stat=1                              #change stat of hit to 1
-                     break
-             valid_bit = 1
-             for i in range(2):                              #check if any of the ways is empty
-                 if (valid[set_index][i]==0):                           #if so save the index of this way
-                     valid_way=i
-                     valid_bit=0                             #valid bit of the way is zero
-                     break
+         if(hit_stat==1):                                #hit since the tags are matching
+             Hits+=1
+             LRU[set_index] = update_LRU(LRU[set_index], hitway)               #update LRU since we are using the way
+             hit_stat=0                                  #reset
+             valid_bit=1
+             HorM= "Hit"
+             print_way=hitway
 
-             if(hit_stat==1):                                #hit since the tags are matching
-                 hits+=1
-                 LRU[set_index] = update_LRU(LRU[set_index], hitway)               #update LRU since we are using the way
-                 hit_stat=0                                  #reset
-                 valid_bit=1
-                 HorM= "Hit"
-                 print_way=hitway
+         else:
+             Misses+=1
+             if (valid_bit==0):                          #if the way is empty
+                 ways_tag[set_index][valid_way]= tag_bits           #update the tag of the way
+                 LRU[set_index] = update_LRU(LRU[set_index], valid_way)        #update LRU
+                 valid[set_index][valid_way]=1                      #update valid array
+                 print_way= valid_way
 
-             else:
-                 misses+=1
-                 if (valid_bit==0):                          #if the way is empty
-                     ways_tag[set_index][valid_way]= tag_bits           #update the tag of the way
-                     LRU[set_index] = update_LRU(LRU[set_index], valid_way)        #update LRU
-                     valid[set_index][valid_way]=1                      #update valid array
-                     print_way= valid_way
+             else:                                           #if the way is not empty but the tag does not match
+                 temp_index = get_least_recently_used(LRU[set_index])   #get the least recent used way
+                 ways_tag[set_index][temp_index]= tag_bits              #update the tag
+                 LRU[set_index] = update_LRU(LRU[set_index], temp_index)           #update LRU
+                 print_way= temp_index
+             HorM="Miss"
 
-                 else:                                           #if the way is not empty but the tag does not match
+         if(set_index==0):
+             for i in range(8):                                               #updating Cache
+                 cache[(print_way*8)+i]= MEM[(int(addr_from,16) +i)]       #will add mem[] to load from memory
+             cache_block=print_way*1
 
-                     temp_index = get_least_recently_used(LRU[set_index])   #get the least recent used way
-                     ways_tag[set_index][temp_index]= tag_bits              #update the tag
-                     LRU[set_index] = update_LRU(LRU[set_index], temp_index)           #update LRU
-                     print_way= temp_index
-                 HorM="Miss"
+         elif(set_index==1):
+             for i in range(8):                                               #updating Cache
+                 cache[((print_way*8)+16)+i]= MEM[(int(addr_from,16) +i)]       #will add mem[] to load from memory
+             cache_block= (print_way*1)+2
 
-             if(set_index==0):
-                 for i in range(8):                                               #updating Cache
-                     Cache[(print_way*8)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
-                 cache_block=print_way*1
+         elif(set_index==2):
+             for i in range(8):                                               #updating Cache
+                 Cache[((print_way*8)+32)+i]= MEM[(int(addr_from,16) +i)]     #will add mem[] to load from memory
+             cache_block= (print_way*1)+4
 
-             elif(set_index==1):
-                 for i in range(8):                                               #updating Cache
-                     Cache[((print_way*8)+16)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
-                 cache_block= (print_way*1)+2
-
-             elif(set_index==2):
-                 for i in range(8):                                               #updating Cache
-                     Cache[((print_way*8)+32)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
-                 cache_block= (print_way*1)+4
-
-             elif(set_index==3):
-                 for i in range(8):                                               #updating Cache
-                     Cache[((print_way*8)+48)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
-                 cache_block= (print_way*1)+6
+         elif(set_index==3):
+             for i in range(8):                                               #updating Cache
+                 cache[((print_way*8)+48)+i]= MEM[(int(addr_from,16) +i)]       #will add mem[] to load from memory
+             cache_block= (print_way*1)+6
 
 
 
-             print("Looking at set: "+str(set_index)+ " ,Way: "+str(print_way))
-             print("Way information: ")
-             print("valid bit: " + str(valid_bit))
-             print("tag bit:" + str(tag_bits))
-             print("Hit or Miss: "+ HorM)
-             print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
-             print("Bringing into block " + str(cache_block) + " of the cache\n")
-             print("cache: "+ str(Cache)+"\n")
+         print("Looking at set: "+str(set_index)+ " ,Way: "+str(print_way))
+         print("Way information: ")
+         print("valid bit: " + str(valid_bit))
+         print("tag bit:" + str(tag_bits))
+         print("Hit or Miss: "+ HorM)
+         print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
+         print("Bringing into block " + str(cache_block) + " of the cache\n")
+         print("cache: "+ str(cache)+"\n")
 
-             print("\n")
-
-         SA_misses = misses
-         SA_hits = hits
-         SA_rate = hits / misses
-
-         print("Total hits: " + str(SA_hits))
-         print("Total misses: " + str(SA_misses))
-         print("Hit rate: " + str(SA_rate))
+         print("\n")
 
     elif(user_input=='d'):
 
@@ -511,17 +496,7 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
             MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
             cache_addr= hex(regval[int(line[2])] + imm)
 
-            #(user_input, mem_addr,tag,valid,cache,misses,hits):
-            #imulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,misses,hits)
-
-
-
-
-
             final_hits,final_misses=cache_simulator(user_input,cache_addr,tag,valid,cache,MEM,final_hits,final_misses,ways_tag,LRU)
-
-
-
 
             bin_str = format(MEM_val, '32b')
             if bin_str[0] == '1':
@@ -546,6 +521,8 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
             DIC += 1
             imm = get_imm(line, 1)
             MEM_val = regval[int(line[0])]
+            cache_addr= hex(regval[int(line[2])] + imm)
+            final_hits,final_misses=cache_simulator(user_input,cache_addr,tag,valid,cache,MEM,final_hits,final_misses,ways_tag,LRU)
             MEM[ regval[int(line[2])] + imm ] = MEM_val
             f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
             f.write('PC is now at ' + str(PC) + '\n')
@@ -585,7 +562,7 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
     print("\n\n**************************************** FINAL CYCLE INFO ****************************************\n")
     stats.exitSim()
 
-    print("Total hits: " + str(final_hits) )
+    print("Total hits: " + str(final_hits))
     print("Total misses: " + str(final_misses))
 
     f.close()
@@ -1442,6 +1419,14 @@ def main():
             Cache=[0 for i in range(64)]
             tag=[0]
 
+            simulate_cache(asm,file_NameOut,select,user_input,tag,valid,Cache,ways_tag,LRU)
+
+        elif(user_input=='c'):
+            valid = [[0 for i in range(2)] for j in range(4)]
+            ways_tag = [[0 for i in range(2)] for j in range(4)]
+            LRU = [[-1 for i in range(2)] for j in range(4)]
+            Cache = [0 for i in range(64)]
+            tag=[0]
             simulate_cache(asm,file_NameOut,select,user_input,tag,valid,Cache,ways_tag,LRU)
 
         print("IP\n")
