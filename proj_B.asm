@@ -1,3 +1,4 @@
+#Prog B, parameter = (0x2070, 5)
 ori $8, $0, 2
 addi $9, $0, 0x60
 sw_loop:
@@ -9,11 +10,11 @@ sub $8, $0, $8
 addi $8, $8, -3
 beq $0, $0, sw_loop
 sw_done:
-addi $8, $0, 0x2078
+addi $8, $0, 0x2070
 addi $10, $0, 0x2060
 addi $9, $0, 0x2000
 outer_loop:
-addi $14, $0, 3
+addi $14, $0, 5
 lw $11, 0($9)
 inner_loop:
 addi $9, $9, 4
@@ -27,4 +28,4 @@ bne $14, $0, inner_loop
 sw $11, 0($8)
 addi $8, $8, 4
 slt $13, $9, $10
-bne $13, $0, outer_loop
+bne $13, $0, outer_loop 
