@@ -1,38 +1,60 @@
 
 import time
 
-class Statistics:
+class Statistics_Pipeine:
     def __init__(self, debugMode):
         self.I= ""               #current instruction being executed
         self.name = ""           # name of the instruction
         self.cycle = 0           # Total cycles in simulation
-        self.DIC = 0             # Total Dynamic Instr Count
-        self.threeCycles= 0      # How many instr that took 3 cycles to execute
-        self.fourCycles = 0      #                          4 cycles
-        self.fiveCycles = 0      #                          5 cycles
-        self.DataHazard = 0      #number of data hazards
-        self.ControlHazard = 0   #number of control hazards
         self.NOPcount = 0        #keeps track of NOP
-        self.flushCount = 0      #keeps track of flush
-        self.stallCount = 0      #keeps track of stall count
+        self.branch_taken_stall = 0      #keeps track of flush
+        self.lw_use_stall = 0      #keeps track of stall count
+        self.compute_branch_stall = 0      #keeps track of stall count
+        self.lw_branch_stall = 0
+        self.ALUoutM_ALUSrcB = 0
+        self.ALUoutM_ALUSrcA = 0
+        self.ALUoutM_EqualD = 0
+        self.ALUoutM_WriteDataE = 0
+        self.ResultW_ALUSrcA = 0
+        self.ResultW_ALUSrcB = 0
+        self.ResultW_EqualD = 0
+        self.ResultW_WriteDataE = 0
         self.debugMode = debugMode
     
-    def log(self,name,cycle,pc):
-        self.name = name
-        self.pc = pc
+    def log_forward(self, cycle, ALUoutM_ALUSrcB, ALUoutM_ALUSrcA, ALUoutM_EqualD, ALUoutM_WriteDataE, ResultW_ALUSrcA, ResultW_ALUSrcB, ResultW_EqualD,ResultW_WriteDataE):
         self.cycle +=  cycle
-        self.DIC += 1
-        self.threeCycles += 1 if (cycle == 3) else 0
-        self.fourCycles += 1 if (cycle == 4) else 0
-        self.fiveCycles += 1 if (cycle == 5) else 0
+        self.ALUoutM_ALUSrcB += ALUoutM_ALUSrcB
+        self.ALUoutM_ALUSrcA += ALUoutM_ALUSrcA
+        self.ALUoutM_EqualD += ALUoutM_EqualD
+        self.ALUoutM_WriteDataE += ALUoutM_WriteDataE
+        self.ResultW_ALUSrcA += ResultW_ALUSrcA
+        self.ResultW_ALUSrcB += ResultW_ALUSrcB
+        self.ResultW_EqualD += ResultW_EqualD
+        self.ResultW_WriteDataE += ResultW_WriteDataE
+        
+    def log_stall(self, branch_taken_stall, lw_use_stall, compute_branch_stall, lw_branch_stall):
+        self.branch_taken_stall += branch_taken_stall
+        self.lw_use_stall += lw_use_stall
+        self.compute_branch_stall += compute_branch_stall
+        self.lw_branch_stall += lw_branch_stall
 
     def exitSim(self):
         print("***Finished simulation***")
         print("Total # of cycles: " + str(self.cycle))
-        print("Dynamic instructions count: " +str(self.DIC) + ". Break down:")
-        print("                    " + str(self.threeCycles) + " instructions take 3 cycles" )  
-        print("                    " + str(self.fourCycles) + " instructions take 4 cycles" )
-        print("                    " + str(self.fiveCycles) + " instructions take 5 cycles" )
+        print("\nDelay Statistics:")
+        print("                 " + str(self.branch_taken_stall) + " taken branch stalls" )  
+        print("                 " + str(self.lw_use_stall) + " lw use stall" )
+        print("                 " + str(self.compute_branch_stall) + " compute branch stall" )
+        print("                 " + str(self.lw_branch_stall) + " lw then branch stall" )
+        print("\n Forwarding Path Statistics:")
+        print("                            " + str(self.ALUoutM_ALUSrcA) + " ALUOutM ‐> SrcAE" )  
+        print("                            " + str(self.ALUoutM_ALUSrcB) + " ALUOutM ‐> SrcBE" )
+        print("                            " + str(self.ALUoutM_EqualD) + " ALUOutM ‐> WriteDataE" )
+        print("                            " + str(self.ALUoutM_WriteDataE) + " ALUOutM ‐> EqualD" )
+        print("                            " + str(self.ResultW_ALUSrcA) + " ResultW ‐> SrcAE" )  
+        print("                            " + str(self.ResultW_ALUSrcB) + " ResultW ‐> SrcBE" )
+        print("                            " + str(self.ResultW_EqualD) + " ResultW ‐> WriteDataE" )
+        print("                            " + str(self.ResultW_WriteDataE) + " ResultW ‐> EqualD" )
 
 def saveJumpLabel(asm, labelIndex, labelName, labelAddr):
     lineCount = 0
@@ -101,7 +123,13 @@ def get_imm(instr, index):
         imm = int(instr[index])
 
     return imm
-
+#############################################################################
+# this is the main cycle information tracker, it looks at the list 
+# instr_cycles to see the first entry for which cycle an instruction is on
+# then removes that cycle. It repeats this process for the next instructins
+# as well. True is returned if an instruction still has cycles, false once
+# the list has no more cycles.
+#############################################################################
 def cycle_tracker(instr_cycles, DIC):
     
     index = DIC  
@@ -216,21 +244,33 @@ def cycle_tracker(instr_cycles, DIC):
             return False
 
     return False
+#############################################################################
+# This function handles hazard detection. If a hazard is detected it modifies
+# the inst_cycles list to include a fowarding path in the cycle
+# for the cases that a forwarding path is not enough to avoid a hazard this
+# function inserts an NOP to stall in the asn list
+#############################################################################
+def hazards_handle(stats, instr_cycles, asm, instr, labelIndex,labelName, labelAddr):
 
-def hazards_handle(instr_cycles, asm, instr):
-    
+
+    NOP = "addi $23, $23, 0"
     DIC = len(instr_cycles) - 1
     try:    
         instr_cycles[DIC-1]
     except:
-        return
+        return instr
+
     i = 1
+    if asm[instr-i] == NOP:
+        i += 1
+        #breakpoint()
     if ":" in asm[instr-i] or "#" in asm[instr-i]:
         i = 2
         if ":" in asm[instr-i] or "#" in asm[instr-i]:
             i = 3
     if instr - i < 0:
-        return
+        return instr
+
 
     current = asm[instr]   
     current = current.replace("\n","") # Removes extra chars
@@ -262,18 +302,20 @@ def hazards_handle(instr_cycles, asm, instr):
         if current_name in norm_instri:
             rs = int(current[1])
             if rs == prd:
+                stats.log_forward(0,0,1,0,0,0,0,0,0)
                 instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcA"
-                return
 
         if current_name in norm_instrr:
             rt = int(current[2])
             rs = int(current[1])
             if rs == prd:
+                stats.log_forward(0,0,1,0,0,0,0,0,0)
                 if instr_cycles[DIC-1][3][1] == "":
                     instr_cycles[DIC-1][3].append("ALUoutM --> ALUSrcA")
                 else:    
                     instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcA"
             if rt == prd:
+                stats.log_forward(0,1,0,0,0,0,0,0,0)
                 if instr_cycles[DIC-1][3][1] == "":
                     instr_cycles[DIC-1][3].append("ALUoutM --> ALUSrcB")
                 else:    
@@ -284,6 +326,7 @@ def hazards_handle(instr_cycles, asm, instr):
         if current_name == "sw":
             rt = int(current[2])
             if rt == prd:
+                stats.log_forward(0,1,0,0,0,0,0,0,0)
                 instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcB"
 
 
@@ -293,13 +336,24 @@ def hazards_handle(instr_cycles, asm, instr):
             rt = int(current[1])
             rs = int(current[0])
             if rs == prd or rt == prd:
+                stats.log_forward(0,0,0,1,0,0,0,0,0)
                 instr_cycles[DIC-1][3][1] = "ALUoutM --> EqualD"
+                stats.log_stall(0,0,1,0)
+                if asm[instr-1] != NOP and asm[instr-(i-1)] != NOP:
+                    asm.insert(instr, NOP)
+                    labelIndex.clear()
+                    labelName.clear()
+                    labelAddr.clear()                            
+                    saveJumpLabel(asm,labelIndex,labelName, labelAddr)
+                    return instr-1
+
 
     if prev_name in norm_instrr or prev_name in norm_instri:
         prd = int(prev[0])
         if current_name == "lw":
             rt = int(current[2])
             if rt == prd:
+                stats.log_forward(0,1,0,0,0,0,0,0,0)
                 instr_cycles[DIC-1][3][1] = "ALUoutM --> ALUSrcB"
 
 
@@ -308,8 +362,19 @@ def hazards_handle(instr_cycles, asm, instr):
         if current_name in branch:
             rt = int(current[2])
             rs = int(current[1])
-            if rs == prd or rt == prd:
+            if rs == prd or rt == prd:   
+                stats.log_forward(0,0,0,0,0,0,0,1,0)
                 instr_cycles[DIC - 1][5][1] = "ResultW --> EqualD"
+                stats.log_stall(0,0,0,2)
+                if asm[instr-1] != NOP and asm[instr-(i-1)] != NOP:
+                    asm.insert(instr, NOP)
+                    asm.insert(instr, NOP)
+                    labelIndex.clear()
+                    labelName.clear()
+                    labelAddr.clear()                            
+                    saveJumpLabel(asm,labelIndex,labelName, labelAddr)
+                    return instr-1
+
 
     if prev_name in "lw":
         prd = int(prev[0])
@@ -317,16 +382,29 @@ def hazards_handle(instr_cycles, asm, instr):
             rt = int(current[2])
             rs = int(current[1])
             if rs == prd:
+                stats.log_forward(0,0,0,0,0,1,0,0,0)
                 if instr_cycles[DIC-1][3][1] == "":
                     instr_cycles[DIC-1][5].append("ResultW --> ALUSrcA")
                 else:    
                     instr_cycles[DIC-1][5][1] = "ResultW --> ALUSrcA"
             if rt == prd:
+                stats.log_forward(0,0,0,0,0,0,1,0,0)
                 if instr_cycles[DIC-1][5][1] == "":
                     instr_cycles[DIC-1][5].append("ResultW --> ALUSrcB")
                 else:    
-                    instr_cycles[DIC-1][5][1] = "ResultW --> ALUSrcB"
-
+                    instr_cycles[DIC-1][5][1] = "ResultW --> ALUSrcB"       
+            if rt == prd or rs == prd:
+                stats.log_stall(0,1,0,0)
+                if asm[instr-1] != NOP and asm[instr-(i-1)] != NOP:
+                    asm.insert(instr, NOP)
+                    labelIndex.clear()
+                    labelName.clear()
+                    labelAddr.clear()                            
+                    saveJumpLabel(asm,labelIndex,labelName, labelAddr)
+                    return instr-1
+    
+    return instr
+            
 
 def simulate(Instructions, f, debugMode):
     labelIndex = []
@@ -336,7 +414,8 @@ def simulate(Instructions, f, debugMode):
     regNameInit(regName)
     LO = 24
     HI = 25
-    stats = Statistics(debugMode)
+    stats = Statistics_Pipeine(debugMode)
+    NOP = "addi $23, $23, 0"
     
     saveJumpLabel(Instructions,labelIndex,labelName, labelAddr)
     
@@ -352,6 +431,9 @@ def simulate(Instructions, f, debugMode):
         lineCount = 0
         i = 0  
         not_Done = True
+        if loop == 1 and debugMode == 2:
+            tot_cycles = len(instr_cycles)+5
+            stats.log_forward(tot_cycles,0,0,0,0,0,0,0,0)
         while lineCount < len(Instructions):
             
             line = Instructions[lineCount]
@@ -386,10 +468,10 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
-
                 line = line.replace("addi","")
                 line = line.split(",")
                 imm = get_imm(line,2)
@@ -400,15 +482,18 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 PC += 4
                 if(loop == 0):
-                    instr_cycles.append(["addi", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("addi", 4, PC)
+                    if(int(line[0])==23):
+                        instr_cycles.append(["addi-NOP INSTRUCTION", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                    else:
+                        instr_cycles.append(["addi", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
+                        lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
 
 
             elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -426,9 +511,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["xor", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("xor", 4, PC)
-                PC += 4
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
 
 
             #addu
@@ -436,6 +519,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -446,8 +530,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["addu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("addu", 4, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
 
                 regval[int(line[0])] = (abs(regval[int(line[1])]) + abs(regval[int(line[2])])) & 0xFFFFFFFF
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
@@ -459,6 +542,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -475,8 +559,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sltu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("sltu", 4, PC) 
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
 
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
@@ -487,6 +570,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -502,8 +586,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sltu", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("slt", 4, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
 
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
@@ -514,6 +597,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -525,11 +609,10 @@ def simulate(Instructions, f, debugMode):
                 regval[int(line[0])] = (imm | regval[int(line[1])]) & 0xFFFFFFFF
                 if(loop == 0):
                     instr_cycles.append(["ori", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("ori", 4, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
                 if(debugMode != 1):
                     DIC += 1
-                f.write('Operation: $' + line[0] + '= $' + line[1] + " | "  + line[2] + '\n')
+                f.write('Operation: $' + line[0] + '= $' + line[1] + " | "  + line[2] + '\n'),
                 f.write('PC is now at ' + str(PC) + '\n')
                 f.write('Registers that have changed: ' + '$' + line[0] + '=' + line[2] + '\n')
 
@@ -538,6 +621,7 @@ def simulate(Instructions, f, debugMode):
                 if (debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -547,11 +631,11 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["bne", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("bne", 3, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
+
 
                 if(regval[int(line[0])]!=regval[int(line[1])]):
-
+                    stats.log_stall(1, 0, 0, 0)
                     if(line[2].isdigit()): # First,test to see if it's a label or a integer
                         PC = int(line[2])*4
                         lineCount = int(line[2])
@@ -561,9 +645,17 @@ def simulate(Instructions, f, debugMode):
                             if(labelName[i] == line[2]):
                                 PC = labelAddr[i]
                                 lineCount = labelIndex[i]
-                                f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
-                    f.write('No Registers have changed. \n')
+                                f.write('PC is now at ' + str(labelAddr[i]) + '\n')
+                                break
+                        if Instructions[lineCount+1] != NOP:
+                            Instructions.insert(lineCount+1, NOP)  
+                            labelIndex.clear()
+                            labelName.clear()
+                            labelAddr.clear()    
+                            saveJumpLabel(Instructions,labelIndex,labelName, labelAddr)   
+                        f.write('No Registers have changed. \n')
                     continue
+
                 f.write('No Registers have changed. \n')
                 
 
@@ -573,6 +665,7 @@ def simulate(Instructions, f, debugMode):
                 if (debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -582,18 +675,16 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["beq", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("beq", 3, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
 
                 if(regval[int(line[0])]==regval[int(line[1])]):
-
+                    stats.log_stall(1, 0, 0, 0)
                     if(line[2].isdigit()): # First,test to see if it's a label or a integer
                         PC = int(line[2])*4
                         lineCount = int(line[2])
                         f.write('PC is now at ' + str(line[2]) + '\n')
                         f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                         f.write('No Registers have changed. \n')
-                        continue
                     else: # Jumping to label
                         for i in range(len(labelName)):
                             if(labelName[i] == line[2]):
@@ -602,7 +693,13 @@ def simulate(Instructions, f, debugMode):
                                 f.write('PC is now at ' + str(labelAddr[i]) + '\n')       
                                 f.write('No Registers have changed. \n')
                                 break
-                        continue
+                        if Instructions[lineCount+1] != NOP:
+                            Instructions.insert(lineCount+1, NOP)
+                            labelIndex.clear()
+                            labelName.clear()
+                            labelAddr.clear()                            
+                            saveJumpLabel(Instructions,labelIndex,labelName, labelAddr)
+                    continue
                                 
 
                 f.write('No Registers have changed. \n')
@@ -614,6 +711,7 @@ def simulate(Instructions, f, debugMode):
                 if (debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -626,8 +724,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["lw", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("lw", 5, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
 
                 rs = regval[int(line[2])]
                 imm = get_imm(line, 1)                    
@@ -649,6 +746,7 @@ def simulate(Instructions, f, debugMode):
                 if (debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -661,8 +759,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sw", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("sw", 4, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
                 imm = get_imm(line, 1)
                 MEM_val = regval[int(line[0])] 
                 MEM[ regval[int(line[2])] + imm ] = MEM_val
@@ -675,6 +772,7 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -685,8 +783,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sub", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("sub", 4, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
                 regval[int(line[0])] = (regval[int(line[1])] - regval[int(line[2])])  & 0xFFFFFFFF
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
                 f.write('PC is now at ' + str(PC) + '\n')
@@ -697,7 +794,8 @@ def simulate(Instructions, f, debugMode):
                 if(debugMode == 1 and loop == 1):
                     if not_Done:
                         not_Done = cycle_tracker(instr_cycles, DIC)
-                        #hazards_handle(instr_cycles, DIC, asm, instr, regval)
+                        breakpoint()
+                        stats.log_forward(1,0,0,0,0,0,0,0,0)
                         continue
                     DIC += 1
                     not_Done = True
@@ -708,8 +806,7 @@ def simulate(Instructions, f, debugMode):
                     DIC += 1
                 if(loop == 0):
                     instr_cycles.append(["sll", ["Fetch",""], ["Decode",""], ["Execute",""], ["Memory", ""], ["Write Back", ""]])
-                    hazards_handle(instr_cycles, Instructions, lineCount)
-                    stats.log("sll", 4, PC)
+                    lineCount = hazards_handle(stats, instr_cycles, Instructions, lineCount,labelIndex,labelName, labelAddr)
                 imm = get_imm(line,2)
                 regval[int(line[0])] = (regval[int(line[1])] << imm) & 0xFFFFFFFF
                 f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
@@ -720,11 +817,11 @@ def simulate(Instructions, f, debugMode):
             lineCount += 1
 
     PC = (len(Instructions)-len(labelName)) * 4 
-    tot_cycles = DIC + 4
 
     final_print(regval,MEM, PC, DIC)    
     print("\n\n**************************************** FINAL CYCLE INFO ****************************************\n")
-    print("IDEAL PIPLINE: ", tot_cycles)
+    print("PIPLINED CYCLES: ", stats.cycle)
+    stats.exitSim()
 
     f.close()
 
