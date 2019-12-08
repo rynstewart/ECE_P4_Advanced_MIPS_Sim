@@ -56,7 +56,13 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
 
     elif(user_input=='b'):
 
-        address="{0:032b}".format(int(mem_addr[i], 16))             #get the address
+        misses=0
+        hitway=0
+        hit_stat=0
+        valid_way=0
+        valid_bit=0
+
+        address="{0:032b}".format(int(mem_addr, 16))             #get the address
         print("Memory address: "+ address)
         tag_bits= address[0:29]                                     #get the tag bits of this address
         addr_from = hex(int(address[0:32],2) & int("FFFFFFF8",16))  #first address to bring from memory
@@ -82,44 +88,36 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
             valid_bit=1
             HorM= "Hit"
             cache_block=hitway
-            else:
-                misses=+1
-                if (valid_bit==0):                          #if the way is empty
-                    print("Looking at set/block : "+str(valid_way))
-                    ways_tag[valid_way]= tag_bits           #update the tag of the way
-                    LRU = update_LRU(LRU, valid_way)        #update LRU
-                    valid[valid_way]=1                      #update valid array
-                    block_index= valid_way
-                    cache_block=valid_way
-                else:                                           #if the way is not empty but the tag does not match
-                    temp_index = get_least_recently_used(LRU)   #get the least recent used way
-                    ways_tag[temp_index]= tag_bits              #update the tag
-                    LRU = update_LRU(LRU, temp_index)           #update LRU
-                    print("Looking at set/block : "+str(temp_index))
-                    block_index= temp_index
-                    cache_block=temp_index
+        else:
+            misses=+1
+            if (valid_bit==0):                          #if the way is empty
+                print("Looking at set/block : "+str(valid_way))
+                ways_tag[valid_way]= tag_bits           #update the tag of the way
+                LRU = update_LRU(LRU, valid_way)        #update LRU
+                valid[valid_way]=1                      #update valid array
+                block_index= valid_way
+                cache_block=valid_way
+            else:                                           #if the way is not empty but the tag does not match
+                temp_index = get_least_recently_used(LRU)   #get the least recent used way
+                ways_tag[temp_index]= tag_bits              #update the tag
+                LRU = update_LRU(LRU, temp_index)           #update LRU
+                print("Looking at set/block : "+str(temp_index))
+                block_index= temp_index
+                cache_block=temp_index
 
-                HorM="Miss"
+            HorM="Miss"
 
 
-            for i in range(8):                                               #updating Cache
-                Cache[(block_index*8)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+        for i in range(8):                                               #updating Cache
+            cache[(block_index*8)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
 
-            print("Way information: ")
-            print("valid bit: " + str(valid_bit))
-            print("tag bit:" + str(tag_bits))
-            print("Hit or Miss: "+ HorM)
-            print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
-            print("Bringing into block " + str(cache_block) + " of the cache\n")
-            print("cache: "+ str(Cache)+"\n")
-
-        FA_misses= misses
-        FA_hits= hits
-        FA_rate= hits/misses
-
-        print("Total hits: " + str(FA_hits))
-        print("Total misses: " + str(FA_misses))
-        print("Hit rate: " + str(FA_rate))
+        print("Way information: ")
+        print("valid bit: " + str(valid_bit))
+        print("tag bit:" + str(tag_bits))
+        print("Hit or Miss: "+ HorM)
+        print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
+        print("Bringing into block " + str(cache_block) + " of the cache\n")
+        print("cache: "+ str(cache)+"\n")
 
     elif(user_input=='c'): #updating cache needs to be fixed
 
@@ -512,7 +510,7 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
             imm = get_imm(line, 1)
             MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
             cache_addr= hex(regval[int(line[2])] + imm)
-            print( regval[int(line[2])] + imm)
+
             #(user_input, mem_addr,tag,valid,cache,misses,hits):
             #imulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,misses,hits)
 
@@ -1425,6 +1423,7 @@ def main():
     if choice_Name == 2:
         print("IP\n")
     if choice_Name == 3:
+
         user_input= input("Which cache configuration would you like to run (a,b,c,d")
         if(user_input=='a'):
 
@@ -1441,9 +1440,9 @@ def main():
             valid=[0 for i in range(8)]
             LRU=[-1 for i in range(8)]
             Cache=[0 for i in range(64)]
+            tag=[0]
 
             simulate_cache(asm,file_NameOut,select,user_input,tag,valid,Cache,ways_tag,LRU)
-
 
         print("IP\n")
 
