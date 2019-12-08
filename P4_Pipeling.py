@@ -1,4 +1,583 @@
 import time
+import math
+
+def update_LRU(LRU, val): #this function takes the LRU list and the way that is being used now and updating the list
+    if val in LRU:
+        LRU.insert(0, LRU.pop(LRU.index(val)))
+    else:
+        LRU.pop()
+        LRU.insert(0, val)
+    return LRU
+
+def get_least_recently_used(LRU): #this function find the value int LRU that was used least recently
+    for i in range(8):
+        if (LRU[-(i + 1)] != -1):
+            return LRU[-(i + 1)]
+
+def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_tag,LRU):
+
+    print("*****Cache Simulator being accessed*****\n")
+
+    if (user_input=='a'):
+
+        address="{0:032b}".format(int(mem_addr, 16))                     #get mem addr
+        print("Memory address: "+ address)
+        set_index= int(address[26:28],2)                                    #get set index
+        valid_bit= valid[set_index]                                         #check valid bit
+        tag_bits= address[0:26]                                             #get tag bits
+        addr_from = hex(int(address[0:32],2) & int("FFFFFFF0",16))          #first address to bring from memory
+        addr_to = hex(int(address[0:32],2) | int("F",16))                   #last address to bring from memory
+
+        print("Looking at set/block : "+str(set_index))
+        print("Way information: ")
+        print("valid bit: " + str(valid_bit))
+        print("tag bit:" + str(tag_bits))
+
+        if (valid_bit== 0):                                                     #empty block(miss)
+            Misses+=1
+            valid[set_index]=1                                                  #change the valid bit to 1
+            HorM="Miss"
+            tag[set_index]= tag_bits                                            #update the tag of the set
+
+        else:                                                                   #valid bit is 1, occupied block
+            if(tag[set_index]== tag_bits):                                      #tags match(hit)
+                Hits+=1
+                HorM="Hit"
+            else:                                                                #miss due to occupied and new tag
+                Misses+=1
+                HorM="Miss"
+                tag[set_index]= tag_bits                                           #update tag for set
+
+        for i in range(16):                                                 #updating Cache
+            cache[(set_index*16)+i]= hex(MEM[(int(addr_from,16) +i)])
+
+        print("\nHit or Miss: "+ HorM)
+        print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
+        print("Bringing into block " + str(set_index) + " of the cache\n")
+
+
+    elif(user_input=='b'):
+
+        hitway=0
+        hit_stat=0
+        valid_way=0
+        valid_bit=0
+
+        address="{0:032b}".format(int(mem_addr, 16))             #get the address
+        print("Memory address: "+ address)
+        tag_bits= address[0:29]                                     #get the tag bits of this address
+        addr_from = hex(int(address[0:32],2) & int("FFFFFFF8",16))  #first address to bring from memory
+        addr_to = hex(int(address[0:32],2) | int("7",16))           #last address to bring from memory
+
+        for i in range(8):                              #check to see if the tag already exist for one of the ways
+            if (ways_tag[i] == tag_bits):               #if the tag exists
+                hitway=i                                #save the index of this way which indicates a hit
+                hit_stat=1                              #change stat of hit to 1
+                break
+        valid_bit = 1
+        for i in range(8):                              #check if any of the ways is empty
+            if (valid[i]==0):                           #if so save the index of this way
+                valid_way=i
+                valid_bit=0                             #valid bit of the way is zero
+                break
+
+        if(hit_stat==1):                                #hit since the tags are matching
+            print("Looking at set/block : "+str(hitway))
+            Hits+=1
+            LRU = update_LRU(LRU, hitway)               #update LRU since we are using the way
+            hit_stat=0                                  #reset
+            valid_bit=1
+            HorM= "Hit"
+            cache_block=hitway
+            block_index= hitway
+        else:
+            Misses+=1
+            if (valid_bit==0):                          #if the way is empty
+                print("Looking at set/block : "+str(valid_way))
+                ways_tag[valid_way]= tag_bits           #update the tag of the way
+                LRU = update_LRU(LRU, valid_way)        #update LRU
+                valid[valid_way]=1                      #update valid array
+                block_index= valid_way
+                cache_block=valid_way
+            else:                                           #if the way is not empty but the tag does not match
+                temp_index = get_least_recently_used(LRU)   #get the least recent used way
+                ways_tag[temp_index]= tag_bits              #update the tag
+                LRU = update_LRU(LRU, temp_index)           #update LRU
+                print("Looking at set/block : "+str(temp_index))
+                block_index= temp_index
+                cache_block=temp_index
+
+            HorM="Miss"
+
+
+        for i in range(8):                                               #updating Cache
+            cache[(block_index*8)+i]= hex(MEM[(int(addr_from,16) +i)] )     #will add mem[] to load from memory
+
+        print("Way information: ")
+        print("valid bit: " + str(valid_bit))
+        print("tag bit:" + str(tag_bits))
+        print("\nHit or Miss: "+ HorM)
+        print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
+        print("Bringing into block " + str(cache_block) + " of the cache\n")
+        print("cache: "+ str(cache)+"\n")
+
+    elif(user_input=='c'): #updating cache needs to be fixed
+
+         hit_stat = 0
+         valid_way = 0
+         valid_bit = 0
+         hitway = 0
+
+         address="{0:032b}".format(int(mem_addr, 16))
+         print("Memory address: "+ address)
+         tag_bits= address[0:27]
+         set_index= int(address[27:29],2)
+         addr_from = hex(int(address[0:32],2) & int("FFFFFFF8",16))  #first address to bring from memory
+         addr_to = hex(int(address[0:32],2) | int("7",16))           #last address to bring from memory
+
+                                                        #in this case we will check four different lists for each sits
+         for i in range(2):                             #check to see if the tag already exist for one of the ways
+             if (ways_tag[set_index][i] == tag_bits):             #if the tag exists
+                 hitway=i                                #save the index of this way which indicates a hit
+                 hit_stat=1                              #change stat of hit to 1
+                 break
+         valid_bit = 1
+         for i in range(2):                              #check if any of the ways is empty
+             if (valid[set_index][i]==0):                           #if so save the index of this way
+                 valid_way=i
+                 valid_bit=0                             #valid bit of the way is zero
+                 break
+
+         if(hit_stat==1):                                #hit since the tags are matching
+             Hits+=1
+             LRU[set_index] = update_LRU(LRU[set_index], hitway)               #update LRU since we are using the way
+             hit_stat=0                                  #reset
+             valid_bit=1
+             HorM= "Hit"
+             print_way=hitway
+
+         else:
+             Misses+=1
+             if (valid_bit==0):                          #if the way is empty
+                 ways_tag[set_index][valid_way]= tag_bits           #update the tag of the way
+                 LRU[set_index] = update_LRU(LRU[set_index], valid_way)        #update LRU
+                 valid[set_index][valid_way]=1                      #update valid array
+                 print_way= valid_way
+
+             else:                                           #if the way is not empty but the tag does not match
+                 temp_index = get_least_recently_used(LRU[set_index])   #get the least recent used way
+                 ways_tag[set_index][temp_index]= tag_bits              #update the tag
+                 LRU[set_index] = update_LRU(LRU[set_index], temp_index)           #update LRU
+                 print_way= temp_index
+             HorM="Miss"
+
+         if(set_index==0):
+             for i in range(8):                                               #updating Cache
+                 cache[(print_way*8)+i]= hex(MEM[(int(addr_from,16) +i)])     #will add mem[] to load from memory
+             cache_block=print_way*1
+
+         elif(set_index==1):
+             for i in range(8):                                               #updating Cache
+                 cache[((print_way*8)+16)+i]= hex(MEM[(int(addr_from,16) +i)])     #will add mem[] to load from memory
+             cache_block= (print_way*1)+2
+
+         elif(set_index==2):
+             for i in range(8):                                               #updating Cache
+                 cache[((print_way*8)+32)+i]= hex(MEM[(int(addr_from,16) +i)])     #will add mem[] to load from memory
+             cache_block= (print_way*1)+4
+
+         elif(set_index==3):
+             for i in range(8):                                               #updating Cache
+                 cache[((print_way*8)+48)+i]= hex(MEM[(int(addr_from,16) +i)])       #will add mem[] to load from memory
+             cache_block= (print_way*1)+6
+
+
+
+         print("Looking at set: "+str(set_index)+ " ,Way: "+str(print_way))
+         print("Way information: ")
+         print("valid bit: " + str(valid_bit))
+         print("tag bit:" + str(tag_bits))
+         print("\nHit or Miss: "+ HorM)
+         print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
+         print("Bringing into block " + str(cache_block) + " of the cache\n")
+
+
+         print("\n")
+
+    elif(user_input=='d'):
+
+        hit_stat = 0
+        valid_way = 0
+        valid_bit = 0
+        hitway = 0
+        cache_block=0
+
+        address="{0:032b}".format(int(mem_addr, 16))
+        print("Memory address: "+ address)
+        tag_bits= address[0:28]
+        set_index= int(address[28:29],2)
+        addr_from = hex(int(address[0:32],2) & int("FFFFFFF8",16))  #first address to bring from memory
+        addr_to = hex(int(address[0:32],2) | int("7",16))           #last address to bring from memory
+
+                                                    #in this case we will check four different lists for each sits
+        for i in range(4):                             #check to see if the tag already exist for one of the ways
+
+            if (ways_tag[set_index][i] == tag_bits):             #if the tag exists
+                hitway=i                                #save the index of this way which indicates a hit
+                hit_stat=1                              #change stat of hit to 1
+                break
+        valid_bit = 1
+
+        for i in range(4):                              #check if any of the ways is empty
+            if (valid[set_index][i]==0):                           #if so save the index of this way
+                valid_way=i
+                valid_bit=0                             #valid bit of the way is zero
+                break
+
+        if(hit_stat==1):                                #hit since the tags are matching
+            Hits+=1
+            LRU[set_index] = update_LRU(LRU[set_index], hitway)               #update LRU since we are using the way
+            hit_stat=0                                  #reset
+            valid_bit=1
+            HorM= "Hit"
+            print_way=hitway
+
+        else:
+            Misses+=1
+            if (valid_bit==0):                          #if the way is empty
+                ways_tag[set_index][valid_way]= tag_bits           #update the tag of the way
+                LRU[set_index] = update_LRU(LRU[set_index], valid_way)        #update LRU
+                valid[set_index][valid_way]=1                      #update valid array
+                print_way= valid_way
+
+            else:                                           #if the way is not empty but the tag does not match
+
+                temp_index = get_least_recently_used(LRU[set_index])   #get the least recent used way
+                ways_tag[set_index][temp_index]= tag_bits              #update the tag
+                LRU[set_index] = update_LRU(LRU[set_index], temp_index)           #update LRU
+                print_way= temp_index
+            HorM="Miss"
+
+        if(set_index==0):
+            for i in range(8):                                               #updating Cache
+                cache[(print_way*8)+i]= hex(MEM[(int(addr_from,16) +i)])     #will add mem[] to load from memory
+            cache_block=print_way*1
+
+        elif(set_index==1):
+            for i in range(8):           #updating Cache
+                cache[((print_way*8)+32)+i]= hex(MEM[(int(addr_from,16) +i)])    #will add mem[] to load from memory
+            cache_block= (print_way*1)+4
+
+
+
+
+        print("Looking at set: "+str(set_index)+ " ,Way: "+str(print_way))
+        print("Way information: ")
+        print("valid bit: " + str(valid_bit))
+        print("tag bit:" + str(tag_bits))
+        print("\nHit or Miss: "+ HorM)
+        print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
+        print("Bringing into block " + str(cache_block) + " of the cache\n")
+        print("cache: "+ str(cache)+"\n")
+
+        print("\n")
+
+    return Hits,Misses
+
+def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_tag,LRU):
+
+    MEM = [0]*12288 #intialize array to all 0s for 0x3000 indices
+    labelIndex = []
+    labelName = []
+    labelAddr = []
+    regName = []
+    PC = 0
+    DIC = 0
+    regNameInit(regName)
+    regval = [0]*26 #0-23 and lo, hi
+    LO = 24
+    HI = 25
+    stats = Statistics(debugMode)
+    final_hits=0
+    final_misses=0
+
+    saveJumpLabel(Instructions,labelIndex,labelName, labelAddr)
+
+
+    f = open(f,"w+")
+    lineCount = 0
+    i = 0
+
+
+    while lineCount < len(Instructions):
+
+        line = Instructions[lineCount]
+
+
+
+        f.write('------------------------------ \n')
+        if(not(':' in line)):
+            f.write('MIPS Instruction: ' + line + '\n')
+        line = line.replace("\n","") # Removes extra chars
+        line = line.replace("$","")
+        line = line.replace(" ","")
+        line = line.replace("zero","0") # assembly can also use both $zero and $0
+
+
+        if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
+            line = line.replace("addi","")
+            line = line.split(",")
+            imm = get_imm(line,2)
+            regval[int(line[0])] = (regval[int(line[1])] + imm)  & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + line[2] + '; ' + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+            DIC += 1
+            PC += 4
+
+        elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
+
+            line = line.replace("xor","")
+            line = line.split(",")
+            x = regval[int(line[1])]
+            y = regval[int(line[2])]
+            z = int(x)^int(y)
+            regval[int(line[0])] = z & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' ^ $' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+            DIC += 1
+
+            PC += 4
+
+        elif(line[0:4] == "addu"):
+
+            line = line.replace("addu","")
+            line = line.split(",")
+            PC = PC + 4
+            DIC += 1
+            if debugMode != 1:
+                stats.log("addu", 4, PC)
+
+            regval[int(line[0])] = (abs(regval[int(line[1])]) + abs(regval[int(line[2])])) & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' + ' + '$' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+        elif(line[0:4] == "sltu"):
+
+            line = line.replace("sltu","")
+            line = line.split(",")
+            if(abs(regval[int(line[1])]) < abs(regval[int(line[2])])):
+                regval[int(line[0])] = 1
+            else:
+                regval[int(line[0])] = 0
+
+            PC = PC + 4
+            DIC += 1
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
+
+        elif(line[0:3] == "slt"):
+
+            line = line.replace("slt","")
+            line = line.split(",")
+            if(regval[int(line[1])] < regval[int(line[2])]):
+                regval[int(line[0])] = 1
+            else:
+                regval[int(line[0])] = 0
+
+            PC = PC + 4
+            DIC += 1
+
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' < $' + line[2] + '? 1 : 0 ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
+
+        elif(line[0:3] == "ori"):
+            line = line.replace("ori", "")
+            line = line.split(",")
+            imm = get_imm(line,2)
+            PC = PC + 4
+            DIC += 1
+            regval[int(line[0])] = (imm | regval[int(line[1])]) & 0xFFFFFFFF
+
+            f.write('Operation: $' + line[0] + '= $' + line[1] + " | "  + line[2] + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + '=' + line[2] + '\n')
+
+        elif(line[0:3] == "bne"): # BNE
+            line = line.replace("bne","")
+            line = line.split(",")
+            DIC += 1
+
+            if(regval[int(line[0])]!=regval[int(line[1])]):
+                if(line[2].isdigit()): # First,test to see if it's a label or a integer
+                    PC = int(line[2])*4
+                    lineCount = int(line[2])
+                    f.write('PC is now at ' + str(line[2]) + '\n')
+                else: # Jumping to label
+                    for i in range(len(labelName)):
+                        if(labelName[i] == line[2]):
+                            PC = labelAddr[i]
+                            if debugMode != 1:
+                                stats.log("bne", 3, PC)
+                            lineCount = labelIndex[i]
+                            f.write('PC is now at ' + str(labelAddr[i]) + '\n')
+                            break
+                f.write('No Registers have changed. \n')
+                continue
+            f.write('No Registers have changed. \n')
+
+        elif(line[0:3] == "beq"): # Beq
+            line = line.replace("beq","")
+            line = line.split(",")
+            DIC += 1
+
+            if(regval[int(line[0])]==regval[int(line[1])]):
+                if(line[2].isdigit()): # First,test to see if it's a label or a integer
+                    PC = int(line[2])*4
+                    lineCount = int(line[2])
+                    f.write('PC is now at ' + str(line[2]) + '\n')
+                    f.write('PC is now at ' + str(labelAddr[i]) + '\n')
+                    f.write('No Registers have changed. \n')
+                    continue
+                else: # Jumping to label
+                    for i in range(len(labelName)):
+                        if(labelName[i] == line[2]):
+                            PC = labelAddr[i]
+                            lineCount = labelIndex[i]
+                            f.write('PC is now at ' + str(labelAddr[i]) + '\n')
+                f.write('No Registers have changed. \n')
+
+                continue
+
+        elif(line[0:2] =="lw" and not('lw_loop' in line)):
+            if(debugMode == 1):
+                while(True):
+                    user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+                    if(user_pause == ""):
+                        print('MIPS Instruction: ' + line + '\n')
+                        break
+                    if(user_pause == "q"):
+                        print("Continuing in non-stop mode")
+                        debugMode = 2
+                        break
+                    else:
+                        continue
+
+            line= line.replace("lw","")
+            line= line.replace("(",",")
+            line= line.replace(")","")
+            line= line.split(",")
+
+            PC = PC + 4
+            DIC += 1
+            imm = get_imm(line, 1)
+            MEM_val = MEM[ regval[int(line[2])] + imm ] & 0xFFFFFFFF
+            cache_addr= hex(regval[int(line[2])] + imm)
+
+            final_hits,final_misses=cache_simulator(user_input,cache_addr,tag,valid,cache,MEM,final_hits,final_misses,ways_tag,LRU)
+
+            bin_str = format(MEM_val, '32b')
+            if bin_str[0] == '1':
+                MEM_val = MEM_val ^ 0xffffffff
+                MEM_val +=1
+                MEM_val = -MEM_val
+
+            regval[int(line[0])]= MEM_val
+            f.write('Operation: $' + line[0] + ' = ' + 'MEM[$' + line[2] + ' + ' + line[1] + ']; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+
+
+        elif(line[0:2] =="sw" and not('sw_' in line)):
+
+            if(debugMode == 1):
+                while(True):
+                    user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+                    if(user_pause == ""):
+                        print('MIPS Instruction: ' + line + '\n')
+                        break
+                    if(user_pause == "q"):
+                        print("Continuing in non-stop mode")
+                        debugMode = 2
+                        break
+                    else:
+                        continue
+
+            line= line.replace("sw","")
+            line= line.replace("(",",")
+            line= line.replace(")","")
+            line= line.split(",")
+            PC = PC + 4
+            DIC += 1
+            imm = get_imm(line, 1)
+            MEM_val = regval[int(line[0])]
+            cache_addr= hex(regval[int(line[2])] + imm)
+            final_hits,final_misses=cache_simulator(user_input,cache_addr,tag,valid,cache,MEM,final_hits,final_misses,ways_tag,LRU)
+            MEM[ regval[int(line[2])] + imm ] = MEM_val
+            f.write('Operation: MEM[ $' + line[2] + ' + ' + line[1] + ' ] = $' + line[0] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: None\n')
+
+
+        elif(line[0:3] =="sub"):
+
+            line = line.replace("sub","")
+            line = line.split(",")
+            PC = PC + 4
+            DIC += 1
+
+            regval[int(line[0])] = (regval[int(line[1])] - regval[int(line[2])])  & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' - ' + '$' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+
+        elif(line[0:3] == "sll"):
+
+            line = line.replace("sll","")
+            line = line.split(",")
+            PC = PC + 4
+            DIC += 1
+            imm = get_imm(line,2)
+            regval[int(line[0])] = (regval[int(line[1])] << imm) & 0xFFFFFFFF
+            f.write('Operation: $' + line[0] + ' = ' + '$' + line[1] + ' << ' + line[2] + '; ' + '\n')
+            f.write('PC is now at ' + str(PC) + '\n')
+            f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
+
+        lineCount += 1
+
+    PC = (len(Instructions)-len(labelName)) * 4
+
+    printarray = [[0 for i in range(16)] for j in range(4)]
+
+    print("\n\n**************************************** FINAL CACHE RESULTS ****************************************\n")
+
+
+    for i in range(16):
+        printarray[0][i]=cache[i]
+        printarray[1][i]=cache[i+16]
+        printarray[2][i]=cache[i+32]
+        printarray[3][i]=cache[i+48]
+
+
+    print("Total hits: " + str(final_hits))
+    print("Total misses: " + str(final_misses))
+    print("Hit rate: " + str(final_hits/(final_misses+final_hits)))
+    print("\nFinal Cache content: \n"+ str(printarray[0])+"\n"+str(printarray[1])+"\n"+str(printarray[2])+"\n"+str(printarray[3]))
+    print("\n\n")
+
+    final_print(regval,MEM, PC, DIC)
+
+
+
+
+
+    f.close()
+
 
 def multi(MemtoReg, MemWrite, Branch, ALUSrcA, ALUSrcB, RegDst, RegWrite):
 
@@ -163,6 +742,7 @@ def simulate(Instructions, f, debugMode):
         if(debugMode == 1):
             while(True):
                 user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+
                 if(user_pause == ""):
                     print('MIPS Instruction: ' + line + '\n')
                     break
@@ -828,6 +1408,42 @@ def main():
     if choice_Name == 2:
         print("IP\n")
     if choice_Name == 3:
+
+        user_input= input("Which cache configuration would you like to run (a,b,c,d)\n")
+        if(user_input=='a'):
+
+            tag=[0 for i in range(4)]
+            valid=[0 for i in range(4)]
+            Cache=[0 for i in range(64)]
+            ways_tag=[0]
+            LRU=[]
+
+            simulate_cache(asm,file_NameOut,select,user_input,tag,valid,Cache,ways_tag,LRU)
+
+        elif(user_input=='b'):
+            ways_tag=[0 for i in range(8)]
+            valid=[0 for i in range(8)]
+            LRU=[-1 for i in range(8)]
+            Cache=[0 for i in range(64)]
+            tag=[0]
+
+            simulate_cache(asm,file_NameOut,select,user_input,tag,valid,Cache,ways_tag,LRU)
+
+        elif(user_input=='c'):
+            valid = [[0 for i in range(2)] for j in range(4)]
+            ways_tag = [[0 for i in range(2)] for j in range(4)]
+            LRU = [[-1 for i in range(2)] for j in range(4)]
+            Cache = [0 for i in range(64)]
+            tag=[0]
+            simulate_cache(asm,file_NameOut,select,user_input,tag,valid,Cache,ways_tag,LRU)
+        elif(user_input=='d'):
+            valid = [[0 for i in range(4)] for j in range(2)]
+            ways_tag = [[0 for i in range(4)] for j in range(2)]
+            LRU = [[-1 for i in range(4)] for j in range(2)]
+            Cache = [0 for i in range(64)]
+            tag=[0]
+            simulate_cache(asm,file_NameOut,select,user_input,tag,valid,Cache,ways_tag,LRU)
+
         print("IP\n")
 
 
