@@ -119,7 +119,7 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
         print("\nHit or Miss: "+ HorM)
         print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
         print("Bringing into block " + str(cache_block) + " of the cache\n")
-        print("cache: "+ str(cache)+"\n")
+
 
     elif(user_input=='c'): #updating cache needs to be fixed
 
@@ -278,7 +278,7 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
         print("\nHit or Miss: "+ HorM)
         print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
         print("Bringing into block " + str(cache_block) + " of the cache\n")
-        print("cache: "+ str(cache)+"\n")
+
 
         print("\n")
 
