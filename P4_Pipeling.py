@@ -49,12 +49,12 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
                 tag[set_index]= tag_bits                                           #update tag for set
 
         for i in range(16):                                                 #updating Cache
-            cache[(set_index*16)+i]= MEM[(int(addr_from,16) +i)]
+            cache[(set_index*16)+i]= hex(MEM[(int(addr_from,16) +i)])
 
-        print("Hit or Miss: "+ HorM)
+        print("\nHit or Miss: "+ HorM)
         print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
         print("Bringing into block " + str(set_index) + " of the cache\n")
-        print("cache: "+ str(cache)+"\n")
+
 
     elif(user_input=='b'):
 
@@ -111,12 +111,12 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
 
 
         for i in range(8):                                               #updating Cache
-            cache[(block_index*8)+i]= MEM[(int(addr_from,16) +i)]      #will add mem[] to load from memory
+            cache[(block_index*8)+i]= hex(MEM[(int(addr_from,16) +i)] )     #will add mem[] to load from memory
 
         print("Way information: ")
         print("valid bit: " + str(valid_bit))
         print("tag bit:" + str(tag_bits))
-        print("Hit or Miss: "+ HorM)
+        print("\nHit or Miss: "+ HorM)
         print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
         print("Bringing into block " + str(cache_block) + " of the cache\n")
         print("cache: "+ str(cache)+"\n")
@@ -173,22 +173,22 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
 
          if(set_index==0):
              for i in range(8):                                               #updating Cache
-                 cache[(print_way*8)+i]= MEM[(int(addr_from,16) +i)]       #will add mem[] to load from memory
+                 cache[(print_way*8)+i]= hex(MEM[(int(addr_from,16) +i)])     #will add mem[] to load from memory
              cache_block=print_way*1
 
          elif(set_index==1):
              for i in range(8):                                               #updating Cache
-                 cache[((print_way*8)+16)+i]= MEM[(int(addr_from,16) +i)]       #will add mem[] to load from memory
+                 cache[((print_way*8)+16)+i]= hex(MEM[(int(addr_from,16) +i)])     #will add mem[] to load from memory
              cache_block= (print_way*1)+2
 
          elif(set_index==2):
              for i in range(8):                                               #updating Cache
-                 Cache[((print_way*8)+32)+i]= MEM[(int(addr_from,16) +i)]     #will add mem[] to load from memory
+                 cache[((print_way*8)+32)+i]= hex(MEM[(int(addr_from,16) +i)])     #will add mem[] to load from memory
              cache_block= (print_way*1)+4
 
          elif(set_index==3):
              for i in range(8):                                               #updating Cache
-                 cache[((print_way*8)+48)+i]= MEM[(int(addr_from,16) +i)]       #will add mem[] to load from memory
+                 cache[((print_way*8)+48)+i]= hex(MEM[(int(addr_from,16) +i)])       #will add mem[] to load from memory
              cache_block= (print_way*1)+6
 
 
@@ -197,10 +197,10 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
          print("Way information: ")
          print("valid bit: " + str(valid_bit))
          print("tag bit:" + str(tag_bits))
-         print("Hit or Miss: "+ HorM)
+         print("\nHit or Miss: "+ HorM)
          print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
          print("Bringing into block " + str(cache_block) + " of the cache\n")
-         print("cache: "+ str(cache)+"\n")
+
 
          print("\n")
 
@@ -260,12 +260,12 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
 
         if(set_index==0):
             for i in range(8):                                               #updating Cache
-                cache[(print_way*8)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+                cache[(print_way*8)+i]= hex(MEM[(int(addr_from,16) +i)])     #will add mem[] to load from memory
             cache_block=print_way*1
 
         elif(set_index==1):
             for i in range(8):           #updating Cache
-                cache[((print_way*8)+32)+i]= (hex(int(addr_from,16) +i))       #will add mem[] to load from memory
+                cache[((print_way*8)+32)+i]= hex(MEM[(int(addr_from,16) +i)])    #will add mem[] to load from memory
             cache_block= (print_way*1)+4
 
 
@@ -275,7 +275,7 @@ def cache_simulator(user_input, mem_addr,tag,valid,cache,MEM,Hits,Misses,ways_ta
         print("Way information: ")
         print("valid bit: " + str(valid_bit))
         print("tag bit:" + str(tag_bits))
-        print("Hit or Miss: "+ HorM)
+        print("\nHit or Miss: "+ HorM)
         print("Memory accessed: M[ " + addr_from + " - " + addr_to+" ]" )
         print("Bringing into block " + str(cache_block) + " of the cache\n")
         print("cache: "+ str(cache)+"\n")
@@ -313,23 +313,8 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
 
         line = Instructions[lineCount]
 
-        #if "$8" in line:
-            #breakpoint()
 
-        if(debugMode == 1):
-            while(True):
-                user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
-                if(user_pause == ""):
-                    print('MIPS Instruction: ' + line + '\n')
-                    break
 
-                if(user_pause == "q"):
-                    print("Continuing in non-stop mode")
-                    debugMode = 2
-                    break
-
-                else:
-                    continue
         f.write('------------------------------ \n')
         if(not(':' in line)):
             f.write('MIPS Instruction: ' + line + '\n')
@@ -468,11 +453,24 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
                 continue
 
         elif(line[0:2] =="lw" and not('lw_loop' in line)):
+            if(debugMode == 1):
+                while(True):
+                    user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+                    if(user_pause == ""):
+                        print('MIPS Instruction: ' + line + '\n')
+                        break
+                    if(user_pause == "q"):
+                        print("Continuing in non-stop mode")
+                        debugMode = 2
+                        break
+                    else:
+                        continue
 
             line= line.replace("lw","")
             line= line.replace("(",",")
             line= line.replace(")","")
             line= line.split(",")
+
             PC = PC + 4
             DIC += 1
             imm = get_imm(line, 1)
@@ -495,6 +493,19 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
 
 
         elif(line[0:2] =="sw" and not('sw_' in line)):
+
+            if(debugMode == 1):
+                while(True):
+                    user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+                    if(user_pause == ""):
+                        print('MIPS Instruction: ' + line + '\n')
+                        break
+                    if(user_pause == "q"):
+                        print("Continuing in non-stop mode")
+                        debugMode = 2
+                        break
+                    else:
+                        continue
 
             line= line.replace("sw","")
             line= line.replace("(",",")
@@ -541,18 +552,22 @@ def simulate_cache(Instructions, f, debugMode,user_input,tag,valid,cache,ways_ta
 
     PC = (len(Instructions)-len(labelName)) * 4
 
-    final_print(regval,MEM, PC, DIC)
-    print("\n\n**************************************** FINAL CYCLE INFO ****************************************\n")
-    stats.exitSim()
+    print("\n\n**************************************** FINAL CACHE RESULTS ****************************************\n")
+
+
 
     print("Total hits: " + str(final_hits))
     print("Total misses: " + str(final_misses))
+    print("Hit rate: " + str(final_hits/(final_misses+final_hits)))
+    print("\n\n")
+
+    final_print(regval,MEM, PC, DIC)
+
+
+
+
 
     f.close()
-
-
-
-
 
 
 def multi(MemtoReg, MemWrite, Branch, ALUSrcA, ALUSrcB, RegDst, RegWrite):
@@ -718,6 +733,7 @@ def simulate(Instructions, f, debugMode):
         if(debugMode == 1):
             while(True):
                 user_pause = input("Press enter to continue or q to quit diagnosis mode:\n")
+
                 if(user_pause == ""):
                     print('MIPS Instruction: ' + line + '\n')
                     break
