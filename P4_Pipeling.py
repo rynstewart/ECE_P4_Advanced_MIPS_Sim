@@ -598,11 +598,6 @@ class Statistics:
         self.threeCycles= 0      # How many instr that took 3 cycles to execute
         self.fourCycles = 0      #                          4 cycles
         self.fiveCycles = 0      #                          5 cycles
-        #self.DataHazard = 0      #number of data hazards
-        #self.ControlHazard = 0   #number of control hazards
-        #self.NOPcount = 0        #keeps track of NOP
-        #self.flushCount = 0      #keeps track of flush
-        #self.stallCount = 0      #keeps track of stall count
         self.debugMode = debugMode
     
     def log(self,name,cycle,pc):
@@ -757,6 +752,7 @@ def simulate(Instructions, f, debugMode):
     LO = 24
     HI = 25
     stats = Statistics(debugMode)
+    signals = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0,0,0],[0,0,0],[0,0,0]]
 
     saveJumpLabel(Instructions,labelIndex,labelName, labelAddr)
 
@@ -796,29 +792,87 @@ def simulate(Instructions, f, debugMode):
 
         if(line[0:4] == "addi"): # ADDI, $t = $s + imm; advance_pc (4); addi $t, $s, imm
             
+            if(debugMode != 1):
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][2] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][0] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][0] += 1
+                signals[6][1] += 1
+        
             if(debugMode == 1):
 
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
                     multi("X", "0", "0", "1", "10", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][2] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
                     multi("0", "0", "0", "X", "X", "0", "1")
+                    signals[0][0] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][0] += 1
+                    signals[6][1] += 1
                     i = 0
                     stats.log("addi", 4, PC)
 
@@ -835,18 +889,61 @@ def simulate(Instructions, f, debugMode):
 
 
         elif(line[0:3] == "xor"): #$d = $s ^ $t; advance_pc (4); xor $d, $s, $t
-            
+            if debugMode != 1:
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][0] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][0] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][1] += 1
+                signals[6][1] += 1
+    
             if(debugMode == 1):
 
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
@@ -854,12 +951,26 @@ def simulate(Instructions, f, debugMode):
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
                     multi("X", "0", "0", "1", "0", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][0] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
                     multi("0", "0", "0", "X", "X", "1", "1")
+                    signals[0][0] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][1] += 1
+                    signals[6][1] += 1
                     i = 0
                     stats.log("xor", 4, PC)
 
@@ -881,18 +992,62 @@ def simulate(Instructions, f, debugMode):
 
         #addu
         elif(line[0:4] == "addu"): 
+            if debugMode != 1:
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][0] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][0] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][1] += 1
+                signals[6][1] += 1  
+
 
             if(debugMode == 1):
 
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
@@ -900,12 +1055,26 @@ def simulate(Instructions, f, debugMode):
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
                     multi("X", "0", "0", "1", "0", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][0] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
                     multi("0", "0", "0", "X", "X", "1", "1")
+                    signals[0][0] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][1] += 1
+                    signals[6][1] += 1                    
                     i = 0
                     stats.log("addu", 4, PC)
 
@@ -922,18 +1091,62 @@ def simulate(Instructions, f, debugMode):
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[int(line[0])]) + '\n')
 
         elif(line[0:4] == "sltu"):
+            
+            if debugMode != 1:
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][0] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][0] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][1] += 1
+                signals[6][1] += 1  
 
             if(debugMode == 1):
 
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
@@ -941,12 +1154,26 @@ def simulate(Instructions, f, debugMode):
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
                     multi("X", "0", "0", "1", "0", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][0] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
                     multi("0", "0", "0", "X", "X", "1", "1")
+                    signals[0][0] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][1] += 1
+                    signals[6][1] += 1 
                     i = 0
                     stats.log("sltu", 4, PC)
 
@@ -968,30 +1195,88 @@ def simulate(Instructions, f, debugMode):
 
 
         elif(line[0:3] == "slt"):
+            
+            if debugMode != 1:
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][0] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][0] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][1] += 1
+                signals[6][1] += 1  
 
             if(debugMode == 1):
 
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
                     multi("X", "0", "0", "1", "0", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][0] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
                     multi("0", "0", "0", "X", "X", "1", "1")
+                    signals[0][0] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][1] += 1
+                    signals[6][1] += 1  
                     i = 0
                     stats.log("slt", 4, PC)
 
@@ -1012,29 +1297,87 @@ def simulate(Instructions, f, debugMode):
             f.write('Registers that have changed: ' + '$' + line[0] + ' = ' + str(regval[ int(line[0]) ]) + '\n')
 
         elif(line[0:3] == "ori"):
+            
+            if(debugMode != 1):
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][2] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][0] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][0] += 1
+                signals[6][1] += 1
            
             if(debugMode == 1):
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1  
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n')
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n')
                     multi("X", "0", "0", "1", "10", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][2] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n')
                     multi("0", "0", "0", "X", "X", "0", "1")
+                    signals[0][0] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][0] += 1
+                    signals[6][1] += 1
                     i = 0
                     stats.log("ori", 4, PC)
 
@@ -1055,23 +1398,67 @@ def simulate(Instructions, f, debugMode):
         elif(line[0:3] == "bne"): # BNE
             line = line.replace("bne","")
             line = line.split(",")
+            if(debugMode != 1):
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][1] += 1
+                signals[3][1] += 1
+                signals[4][0] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+
 
             if (debugMode == 1):
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n')
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n')
                     multi("X", "0", "1", "1", "0", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][1] += 1
+                    signals[3][1] += 1
+                    signals[4][0] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i = 0
                     stats.log("bne", 3, PC)
             DIC += 1
@@ -1101,23 +1488,67 @@ def simulate(Instructions, f, debugMode):
         elif(line[0:3] == "beq"): # Beq
             line = line.replace("beq","")
             line = line.split(",")
+            
+            if(debugMode != 1):
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][1] += 1
+                signals[3][1] += 1
+                signals[4][0] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
 
             if (debugMode == 1):
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n')
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n')
                     multi("X", "0", "1", "1", "0", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][1] += 1
+                    signals[3][1] += 1
+                    signals[4][0] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i = 0
                     stats.log("beq", 3, PC)
             
@@ -1147,34 +1578,105 @@ def simulate(Instructions, f, debugMode):
 
 
         elif(line[0:2] =="lw" and not('lw_loop' in line)):
+            if debugMode != 1:
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1    
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][2] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1 
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1 
+                signals[0][1] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][0] += 1
+                signals[6][1] += 1                          
 
             if (debugMode == 1):
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n')
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n')
                     multi("X", "0", "0", "1", "10", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][2] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n')
                     multi("X", "0", "0", "X", "X", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
                 elif (i == 4):
                     print("Cycle 5: Write Back" + '\n')
                     multi("1", "0", "0", "X", "X", "0", "1")
+                    signals[0][1] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][0] += 1
+                    signals[6][1] += 1
                     i = 0
                     stats.log("lw", 5, PC)
 
@@ -1208,29 +1710,86 @@ def simulate(Instructions, f, debugMode):
                 
 
         elif(line[0:2] =="sw" and not('sw_' in line)):
+            if debugMode != 1:
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][2] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][1] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
 
             if (debugMode == 1):
                 if (i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n')
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n')
                     multi("X", "0", "0", "1", "10", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][2] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n')
                     multi("X", "1", "0", "X", "X", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][1] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i = 0
                     stats.log("sw", 4, PC)
 
@@ -1251,17 +1810,61 @@ def simulate(Instructions, f, debugMode):
 
 
         elif(line[0:3] =="sub"):
+            
+            if debugMode != 1:
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][0] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][0] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][1] += 1
+                signals[6][1] += 1 
 
             if(debugMode == 1):
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
@@ -1269,12 +1872,27 @@ def simulate(Instructions, f, debugMode):
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
                     multi("X", "0", "0", "1", "0", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][0] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
                     multi("0", "0", "0", "X", "X", "1", "1")
+                    signals[6][0] += 1
+                    signals[0][0] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][1] += 1
+                    signals[6][1] += 1                     
                     i = 0
                     stats.log("sub", 4, PC)
 
@@ -1291,17 +1909,60 @@ def simulate(Instructions, f, debugMode):
 
 
         elif(line[0:3] == "sll"):
+            if(debugMode != 1):
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][1] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][0] += 1
+                signals[4][3] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][2] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][1] += 1
+                signals[4][2] += 1
+                signals[5][2] += 1
+                signals[6][0] += 1
+                signals[0][0] += 1
+                signals[1][0] += 1
+                signals[2][0] += 1
+                signals[3][2] += 1
+                signals[4][4] += 1
+                signals[5][0] += 1
+                signals[6][1] += 1
 
             if(debugMode == 1):
                 if(i == 0):
                     print("Cycle 1: Instruction Fetch" + '\n')
                     multi("X", "0", "0", "0", "1", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][1] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 1):
                     print("Cycle 2: Decode" + '\n' )
                     multi("X", "0", "0", "0", "11", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][0] += 1
+                    signals[4][3] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
@@ -1309,12 +1970,26 @@ def simulate(Instructions, f, debugMode):
                 elif (i == 2):
                     print("Cycle 3: Execute" + '\n' )
                     multi("X", "0", "0", "1", "0", "X", "0")
+                    signals[0][2] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][1] += 1
+                    signals[4][2] += 1
+                    signals[5][2] += 1
+                    signals[6][0] += 1
                     i += 1
                     continue
 
                 elif (i == 3):
                     print("Cycle 4: Memory" + '\n' )
                     multi("0", "0", "0", "X", "X", "1", "1")
+                    signals[0][0] += 1
+                    signals[1][0] += 1
+                    signals[2][0] += 1
+                    signals[3][2] += 1
+                    signals[4][4] += 1
+                    signals[5][0] += 1
+                    signals[6][1] += 1
                     i = 0
                     stats.log("sll", 4, PC) 
 
@@ -1337,6 +2012,21 @@ def simulate(Instructions, f, debugMode):
     final_print(regval,MEM, PC, DIC)    
     print("\n\n**************************************** FINAL CYCLE INFO ****************************************\n")
     stats.exitSim()
+    signals_name = ["MemtoReg", "MemWrite", "Branch", "ALUSrcA", "ALUSrcB", "RegDst", "RegWrite"]
+    for t in range(len(signals_name)):
+        if signals_name[t] == "ALUSrcB":
+            print("For " + signals_name[t] + ":\n")
+            print("\t 00's: ", signals[t][0])
+            print("\t 01's: ", signals[t][1])
+            print("\t 10's: ", signals[t][2])
+            print("\t 11's: ", signals[t][3])
+            print("\t X's: ", signals[t][4])
+            continue
+
+        print("For " + signals_name[t] + ":\n")
+        print("\t 0's: ", signals[t][0])
+        print("\t 1's: ", signals[t][1])
+        print("\t X's: ", signals[t][2])
 
     f.close()
 
